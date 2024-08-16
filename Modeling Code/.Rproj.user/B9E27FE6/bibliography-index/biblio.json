@@ -1,0 +1,310 @@
+{
+    "sources": [
+        {
+            "URL": "http://www.jstor.org/stable/j.ctt7sdj6.",
+            "author": [
+                {
+                    "family": "Amstrup",
+                    "given": "Steven C."
+                },
+                {
+                    "family": "Mcdonald",
+                    "given": "Trent L."
+                },
+                {
+                    "family": "Manly",
+                    "given": "Bryan F. J."
+                }
+            ],
+            "id": "Amstrup2005",
+            "issued": {
+                "date-parts": [
+                    [
+                        2005
+                    ]
+                ]
+            },
+            "publisher": "Princeton Univ. Press",
+            "title": "Handbook of Capture-Recapture Analysis",
+            "type": "book"
+        },
+        {
+            "author": [
+                {
+                    "family": "Petersen",
+                    "given": "C. G. J."
+                }
+            ],
+            "container-title": "Report of the Danish Biological Station",
+            "id": "Petersen1896",
+            "issued": {
+                "date-parts": [
+                    [
+                        1896
+                    ]
+                ]
+            },
+            "page": "5-84",
+            "title": "The yearly immigration of young plaice in the Limfjord from the German sea",
+            "type": "article-journal",
+            "volume": "6"
+        },
+        {
+            "author": [
+                {
+                    "family": "Schnabel",
+                    "given": "Zoe E."
+                }
+            ],
+            "container-title": "American Mathematics Monthly",
+            "id": "Schnabel1938",
+            "issued": {
+                "date-parts": [
+                    [
+                        1938
+                    ]
+                ]
+            },
+            "page": "348-352",
+            "title": "The Estimation of the Total Fish Population of a Lake",
+            "type": "article-journal",
+            "volume": "45"
+        },
+        {
+            "ISBN": "0412042312",
+            "abstract": "Statistics is a subject of many uses and surprisingly few effective practitioners. The traditional road to statistical knowledge is blocked, for most, by a formidable wall of mathematics. The approach in An Introduction to the Bootstrap avoids that wall. It arms scientists and engineers, as well as statisticians, with the computational techniques they need to analyze and understand complicated data sets.",
+            "author": [
+                {
+                    "family": "Efron",
+                    "given": "B"
+                },
+                {
+                    "family": "Tibshirani",
+                    "given": "R J"
+                }
+            ],
+            "id": "Efron1993",
+            "issued": {
+                "date-parts": [
+                    [
+                        1993
+                    ]
+                ]
+            },
+            "title": "An introduction to the bootstrap.",
+            "type": "book"
+        },
+        {
+            "ISBN": "9783642253874",
+            "ISSN": "2301-928X",
+            "PMID": "25246403",
+            "URL": "https://arxiv.org/abs/arXiv:1011.1669v3",
+            "author": [
+                {
+                    "family": "Lincoln",
+                    "given": "Frederick C."
+                }
+            ],
+            "id": "Lincoln1930",
+            "issued": {
+                "date-parts": [
+                    [
+                        1930
+                    ]
+                ]
+            },
+            "publisher": "US Department of Agriculture",
+            "title": "Calculating Waterfowl Abundance on the Basis of Banding Returns",
+            "type": "report",
+            "volume": "118"
+        },
+        {
+            "author": [
+                {
+                    "family": "Cormack",
+                    "given": "R. M."
+                }
+            ],
+            "container-title": "Biometrika",
+            "id": "Cormack1964",
+            "issue": "3",
+            "issued": {
+                "date-parts": [
+                    [
+                        1964
+                    ]
+                ]
+            },
+            "page": "429-438",
+            "title": "Estimates of Survival from the Sighting of Marked Animals",
+            "type": "article-journal",
+            "volume": "51"
+        },
+        {
+            "author": [
+                {
+                    "family": "Jolly",
+                    "given": "G. M."
+                }
+            ],
+            "container-title": "Biometrika",
+            "id": "Jolly1965",
+            "issue": "1",
+            "issued": {
+                "date-parts": [
+                    [
+                        1965
+                    ]
+                ]
+            },
+            "page": "225-247",
+            "title": "Explicit Estimates from Capture-Recapture Data with Both Death and Immigration- Stochastic Model",
+            "type": "article-journal",
+            "volume": "52"
+        },
+        {
+            "author": [
+                {
+                    "family": "Nichols",
+                    "given": "J. D."
+                }
+            ],
+            "editor": [
+                {
+                    "family": "Amstrup",
+                    "given": "Steven C."
+                },
+                {
+                    "family": "McDonald",
+                    "given": "Trent L."
+                },
+                {
+                    "family": "Manly",
+                    "given": "Bryan F. J."
+                }
+            ],
+            "id": "Nichols2005",
+            "issued": {
+                "date-parts": [
+                    [
+                        2008
+                    ]
+                ]
+            },
+            "page": "88-123",
+            "publisher": "Princeton Univ. Press",
+            "title": "Modern Open-Population Capture-Recapture Models",
+            "type": "book"
+        },
+        {
+            "author": [
+                {
+                    "family": "Seber",
+                    "given": "G A F"
+                }
+            ],
+            "container-title": "Biometrika",
+            "id": "Seber1965",
+            "issue": "1",
+            "issued": {
+                "date-parts": [
+                    [
+                        1965
+                    ]
+                ]
+            },
+            "page": "249-259",
+            "title": "A Note on the Multiple-Recapture Census Published",
+            "type": "article-journal",
+            "volume": "52"
+        },
+        {
+            "author": [
+                {
+                    "family": "Mcdonald",
+                    "given": "Trent L."
+                },
+                {
+                    "family": "Amstrup",
+                    "given": "Steven C."
+                }
+            ],
+            "container-title": "American Statistical Association and the International Biometric Society",
+            "id": "Mcdonald2001",
+            "issue": "2",
+            "issued": {
+                "date-parts": [
+                    [
+                        2001
+                    ]
+                ]
+            },
+            "keyword": "jolly,mark,radio telemetry,resight,seber,tag,trap",
+            "page": "206-220",
+            "title": "Estimation of Population Size Using Open Capture – Recapture Models",
+            "type": "article-journal",
+            "volume": "6"
+        },
+        {
+            "ISBN": "9781425803780",
+            "author": [
+                {
+                    "family": "Bergman",
+                    "given": "Jennifer M."
+                },
+                {
+                    "family": "Nielson",
+                    "given": "Ryan M."
+                },
+                {
+                    "family": "Low",
+                    "given": "Alice"
+                }
+            ],
+            "container-title": "Paper Knowledge . Toward a Media History of Documents",
+            "id": "Ryan2013",
+            "issued": {
+                "date-parts": [
+                    [
+                        2013
+                    ]
+                ]
+            },
+            "page": "12-26",
+            "title": "CENTRAL VALLEY CHINOOK SALMON IN-RIVER ESCAPEMENT MONITORING PLAN",
+            "type": "article-journal"
+        },
+        {
+            "ISBN": "01621459",
+            "ISSN": "00283932",
+            "PMID": "16243365",
+            "URL": "http://www.ncbi.nlm.nih.gov/pubmed/16243365",
+            "abstract": "Many researchers have proposed that the near space immediately surrounding the body is represented differently than more distant space. Indeed, it has often been suggested that near space encompasses that within arm’s reach. The present study used a line bisection task in healthy adults to investigate the effects of tool use on space perception, and the nature of the transition between near and far space. Subjects bisected lines at four distances controlled for both veridical and angular size using a laser pointer and a set of sticks. When the laser pointer was used, a left to right shift in bias was observed as stimuli were moved from near to far space. When a tool was used, however, a leftward bias was observed at all distances, similar to that observed with the laser pointer in near space. These results suggest that the tool expanded the range of near space. Additionally, the transition from near to far space was gradual, with no abrupt shift at arm’s length (or at any other distance). In contrast to theories describing near space as that within arm’s reach, these findings suggest that the representation of near space is less rigid, extending with tool use and gradually transitioning into far space.",
+            "author": [
+                {
+                    "family": "Horvitz",
+                    "given": "D. G."
+                },
+                {
+                    "family": "Thompson",
+                    "given": "D. J."
+                }
+            ],
+            "container-title": "Journal of the American Statistical Association",
+            "id": "Horvitz1952",
+            "issue": "260",
+            "issued": {
+                "date-parts": [
+                    [
+                        1952
+                    ]
+                ]
+            },
+            "page": "663-685",
+            "title": "A Generalization of Sampling Without Replacement From a Finite Universe",
+            "type": "article-journal",
+            "volume": "44"
+        }
+    ],
+    "project_biblios": []
+}

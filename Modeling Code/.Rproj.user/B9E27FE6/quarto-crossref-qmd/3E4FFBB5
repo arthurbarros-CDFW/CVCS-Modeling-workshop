@@ -1,0 +1,144 @@
+{
+    "entries": [
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "bstar",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "log_likelihood",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "fig",
+            "id": "ARC2021",
+            "suffix": "",
+            "title": "Histogram of American River bootstrapped escapement results produced by our functions (left) and the escapeMR package (right)."
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "b_tilde",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "superpopulation_mod",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "chi",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "horvitz_thompson",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "indivudal_loglik",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "fig",
+            "id": "demo_data_R",
+            "suffix": "",
+            "title": "Plot of bootstrapped escapement estimates, with upper and lower confidence intervals."
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "logittwo",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "log_regression1",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "total_likelihood",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "logit1",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "log_regression2",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "fig",
+            "id": "sim_N2000",
+            "suffix": "",
+            "title": "Histogram of simulated population bootstrapped escapement results produced by our functions (left) and the escapeMR package (right). Simulated population size N=2000. Number of surveys ns=15."
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "product_probs",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "lincoln_petersen",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "fig",
+            "id": "sim_N4000",
+            "suffix": "",
+            "title": "Histogram of simulated population bootstrapped escapement results produced by our functions (left) and the escapeMR package (right). Simulated population size N=4000. Number of surveys ns=15."
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "eq",
+            "id": "schnabel",
+            "suffix": "",
+            "title": ""
+        },
+        {
+            "file": "Modeling_Review.qmd",
+            "type": "fig",
+            "id": "lp_concept",
+            "suffix": "",
+            "title": "A conceptual diagram of the classic Lincoln-Petersen mark-recapture method."
+        }
+    ]
+}

@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Arthur Barros">
+<meta name="dcterms.date" content="2024-07-10">
+
+<title>CVCS Escapement Modeling</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="Modeling_Review_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Modeling_Review_files/libs/quarto-html/quarto.js"></script>
+<script src="Modeling_Review_files/libs/quarto-html/popper.min.js"></script>
+<script src="Modeling_Review_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Modeling_Review_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Modeling_Review_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Modeling_Review_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Modeling_Review_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Modeling_Review_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Modeling_Review_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">CVCS Escapement Modeling</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Arthur Barros </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">July 10, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction"><u>Introduction</u></h2>
+<p>This document aims to provide an overview of the modeling methods used to estimate the annual escapement, the number of adults returning to spawn, of <strong>Central Valley Chinook Salmon (CVCS)</strong>. Through this document we will review the basic concepts of mark-recapture methods, more complex models like the Cormack-Jolly-Seber, and how to write scripts that can calculate escapement estimates. This review will heavily rely on utilizing R scripting, and assumes the reader has a base understanding of the language, and how to write and implement R scripts and functions. I also assume the reader has a baseline understanding of statistical concepts such as linear regression and probability.</p>
+<p>This is part of an effort to better translate and understand the current <strong>CVCS escapement model</strong> utilized by California Department of Fish and Wildlife (CDFW) and other groups in the <strong>escapeMR</strong> package. This model, R package and application was written by the contractor Trent McDonald, Ph.D., in 2020, and has proven very useful to state scientists in producing annual escapement estimates. While it has proven useful, it has also become a sort of “black-box model” in which users input data and receive outputs without understanding of how the model or package works.</p>
+<p>I also aim to use this documentation in conjunction with a CVCS escapement modeling workshop being held at the West Sacramento CDFW offices on Tuesday August 20th 2024. Throughout this document various chunks of R code will be presented in the following format:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"hello reader"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "hello reader"</code></pre>
+</div>
+</div>
+<p>These chunks are designed for the user to be able to copy and paste, or rewrite entirely, into their own R script to replicate the methods. The functions written in this document can also be found in the “CVCS_functions.R” script included in the workshop repository. The code used in this document also relies on the “tidyverse” R package for various data formatting needs.</p>
+<div style="page-break-after: always;"></div>
+</section>
+<section id="an-introduction-to-mark-recapture-models" class="level2">
+<h2 class="anchored" data-anchor-id="an-introduction-to-mark-recapture-models"><u>An Introduction to Mark-Recapture Models</u></h2>
+<p>Mark and recapture is a common method for ecologists to estimate the size of a population of animals without needing to count each individual. Typically an initial ‘marking’ period is done, in which a sample of the population is captured and marked in some way so that those individuals can be recognized in the future. Then the marked individuals are returned to the greater population and allowed time to mix back in. Later, another sampling period will be conducted in which a sample of the population is collected again, and the number of marked individuals in this sample are enumerated. Because the proportion of marked individuals in the second sample should be proportional to the number of total marked individuals in the population, this ratio can be used to estimate the size of the total population.</p>
+<p>In regards to the CVCS escapement mark-recapture surveys are conducted throughout the Central Valley in what is known as a “carcass survey”. Periodically, field crews will conduct surveys of Chinook salmon spawning grounds, looking for adult carcasses, which they mark with disk tags and return to the river, usually returning within a week to see if the carcass is still in the system, and mark new carcasses that have arrived. The field methods are a little more complex than that summary, and will be expanded upon in further sections.</p>
+<section id="the-lincoln-petersen-estimate" class="level3">
+<h3 class="anchored" data-anchor-id="the-lincoln-petersen-estimate"><em>The Lincoln-Petersen estimate</em></h3>
+<p>The classic mark-recapture estimator is known as the <strong>Lincoln-Petersen</strong> <span class="citation" data-cites="Petersen1896 Lincoln1930">(<a href="#ref-Petersen1896" role="doc-biblioref">Petersen 1896</a>; <a href="#ref-Lincoln1930" role="doc-biblioref">Lincoln 1930</a>)</span> and utilizes the equation:</p>
+<p><span class="math display">\[\hat{N}=\frac{MC}{R} \text{ (eq. 1)}\]</span></p>
+<p>Where <span class="math inline">\(M\)</span> is the number of individuals marked and released during the initial marking period; <span class="math inline">\(R\)</span> is the number of marked individuals recaptured in the later recapture period; <span class="math inline">\(C\)</span> is the number of individuals captured in the recapture period; and <span class="math inline">\(\hat{N}\)</span> is the estimate of population abundance.</p>
+<p>In the diagram below (Figure 1), 7 fish from the population are captured and marked (<span class="math inline">\(K\)</span>) during an initial capture and marking period. Then during a follow up recapture period, 7 fish are again captured (<span class="math inline">\(n\)</span>), and of those 3 have markings (<span class="math inline">\(k\)</span>). This leaves us with an estimate of a total population of roughly 16 fish.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="pictures/figure_LP.png" class="img-fluid figure-img" style="width:60.0%"></p>
+<figcaption class="figure-caption">A conceptual diagram of the classic Lincoln-Petersen mark-recapture method.</figcaption>
+</figure>
+</div>
+<p>There are several important assumptions of the Lincoln-Petersen method:</p>
+<ol type="1">
+<li><p>The population is closed so that <span class="math inline">\(N\)</span> is constant during the study period. No deaths, no births, no immigration or emigration.</p></li>
+<li><p>The probability of capture is equal across all individuals.</p></li>
+<li><p>Fish do not lose their markings between the two sampling periods.</p></li>
+<li><p>All marked fish recaptured during the second sampling period are accurately enumerated and recorded.</p></li>
+</ol>
+<p>The Lincoln-Petersen method was expanded upon upon by Zoe Schnabel <span class="citation" data-cites="Schnabel1938">(<a href="#ref-Schnabel1938" role="doc-biblioref">1938</a>)</span> with the <strong>Schnabel estimator</strong>, which expands the Lincoln-Petersen estimator to allow for multiple periods of capture and recapture, instead of just two.</p>
+<p><span class="math display">\[
+\hat{N}=\frac{\sum_t(C_tM_t)}{\sum_tR_t} \text{ (eq. 2)}
+\]</span></p>
+<p>This allows for marking to occur during multiple sampling periods <span class="math inline">\(t\)</span>. One primary advantage of this method is multiple sampling periods allow for the detection of violation of the above assumptions. Regression of the proportion of marked animals to previously marked animals (<span class="math inline">\(\frac{R_t}{C_t} \sim M_{t-1}\)</span>) will be straight if assumptions are met, and curved if the assumptions are violated.</p>
+<p>If we examine our the annual carcass surveys performed across the Central Valley for returning Chinook salmon, we can easily identify ways in which the system violates the assumptions of the Lincoln-Petersen method:</p>
+<ul>
+<li><p><strong>Populations are open:</strong> throughout the survey period adult Chinook arrive in the survey area, spawn, and die. At the same time spawned out carcasses that may or may not have been marked and counted are removed from the system either by scavengers, decay, or being flushed downstream.</p></li>
+<li><p><strong>Probability of capture is not homogeneous:</strong> probability of”capture” for individual Chinook carcasses is really the probability it is spotted by survey field crews. This can be dependent on a number of factors including carcass size, carcass sex, water flow rates, and turbidity.</p></li>
+</ul>
+<p>The above violations of the Lincoln-Petersen estimates could cause large biases in abundance estimates, and suggests that using this closed population model is ill advised.</p>
+</section>
+<section id="the-cormack-jolly-seber-models" class="level3">
+<h3 class="anchored" data-anchor-id="the-cormack-jolly-seber-models"><em>The Cormack-Jolly-Seber models</em></h3>
+<p>To deal with open populations and heterogeneous capture probabilities we can utilize a Cormack-Jolly-Seber (CJS) model <span class="citation" data-cites="Cormack1964 Jolly1965 Seber1965">(<a href="#ref-Cormack1964" role="doc-biblioref">Cormack 1964</a>; <a href="#ref-Jolly1965" role="doc-biblioref">Jolly 1965</a>; <a href="#ref-Seber1965" role="doc-biblioref">Seber 1965</a>)</span>, which can deal with population changes during the survey period, as well as differences in capture probability among individuals. The CJS method does not directly provide estimates of abundance, instead it utilizes multiple sampling events during the survey period and allows us to calculate two important parameters:</p>
+<ul>
+<li><p><span class="math inline">\(\phi_{ij}\)</span> : the probability carcass <span class="math inline">\(i\)</span> “survives” (remains in the system) from period <span class="math inline">\(j\)</span> to <span class="math inline">\(j+1\)</span>.</p></li>
+<li><p><span class="math inline">\(p_{ij}\)</span> : the probability carcass <span class="math inline">\(i\)</span> is captured during period <span class="math inline">\(j\)</span>.</p></li>
+</ul>
+<p>We will generate estimates for <span class="math inline">\(p_{ij}\)</span> and <span class="math inline">\(\phi_{ij}\)</span> using the CJS Maximum Likelihood Estimation methods later, but for now know that the probability of capture can be used to estimate the population size at period <span class="math inline">\(j\)</span> using the “<strong>Horvitz-Thompson estimato</strong>r” <span class="citation" data-cites="Horvitz1952 Nichols2005">(<a href="#ref-Horvitz1952" role="doc-biblioref">Horvitz and Thompson 1952</a>; <a href="#ref-Nichols2005" role="doc-biblioref">Nichols 2008</a>)</span>:</p>
+<p><span class="math display">\[
+\hat{N_j}=\sum_{i=1}^{n}\frac{h_{ij}}{\hat{p}_{ij}} \space \text{ (eq. 3)}
+\]</span></p>
+<p>Where <span class="math inline">\(h_{ij}\)</span> is the 0 or 1 capture indicator for carcass <span class="math inline">\(i\)</span> at period <span class="math inline">\(j\)</span>, and <span class="math inline">\(n\)</span> is the number of all carcasses observed over all survey periods. Basically it’s saying the abundance of carcasses at time <span class="math inline">\(j\)</span> is equal to the sum of all the carcasses captured during that period divided by their capture probability.</p>
+<p>Typically the total population estimate <span class="math inline">\(\hat{N}\)</span> is calculated by taking the average value of <span class="math inline">\(\hat{N}_j\)</span>, however there are problems with this method when many individuals are entering and leaving the population during the survey. This can be improved by using a <em>superpopulation</em> modification <span class="citation" data-cites="Ryan2013">(<a href="#ref-Ryan2013" role="doc-biblioref">Ryan, Cooper, and Tauer 2013</a>)</span> to estimate total escapement as:</p>
+<p><span class="math display">\[
+\hat{N}_{escapement}=\hat{N}_2\frac{ln(\tilde{\phi}_1)}{\tilde{\phi}_1-1}+B_2^*+B_3^*+...+B_{S-2}^* \space \text{ (eq. 4)}
+\]</span></p>
+<p>Where <span class="math inline">\(B_j^*\)</span>, the adjusted number of “births” (new adults entering the system and dying) between <span class="math inline">\(j\)</span> and <span class="math inline">\(j+1\)</span>, is:</p>
+<p><span class="math display">\[
+B_j^* = \tilde{B}_j\frac{ln(\tilde{\phi}_j)}{\tilde{\phi}_1-1} \space \text{ (eq. 5)}
+\]</span></p>
+<p><span class="math inline">\(\tilde{B}_j\)</span> is the total “births” for period <span class="math inline">\(j\)</span>:</p>
+<p><span class="math display">\[
+\tilde{B}_j=\hat{N}_{j+1} - \tilde{\phi}[\hat{N}_j-(n_j-R_j)]\space \text{ (eq. 6)}
+\]</span></p>
+<p>and <span class="math inline">\(R_j\)</span> is the number of carcasses released with disctags during period <span class="math inline">\(j\)</span>, <span class="math inline">\(n_j\)</span> is the number of carcasses captured during period <span class="math inline">\(j\)</span>, and <span class="math inline">\(\hat{N}_j\)</span> is the estimate of abundance during period <span class="math inline">\(j\)</span> derived from the Horvitz-Thompson estimator in equation 3.</p>
+<div style="page-break-after: always;"></div>
+</section>
+</section>
+<section id="the-cvcs-escapement-model" class="level2">
+<h2 class="anchored" data-anchor-id="the-cvcs-escapement-model"><u>The CVCS Escapement Model</u></h2>
+<section id="the-data" class="level4">
+<h4 class="anchored" data-anchor-id="the-data"><strong>The Data</strong></h4>
+<p>For the CVCS carcass surveys, carcasses are captured over <span class="math inline">\(k\)</span> occasions, usually weekly sampling events, marked with disctags, and deposited back into the system for future recapture. The CJS model used for CVCS carcass surveys incorporates three different data inputs to estimate <span class="math inline">\(\phi_{ij}\)</span> and <span class="math inline">\(p_{ij}\)</span>: capture histories, “chops” records, and covariate data.</p>
+<p><strong>Capture histories</strong> are the records of capture and recapture for a given carcass and usually look similar to:</p>
+<p><span class="math display">\[
+\begin{bmatrix}
+DiscTag &amp; S1 &amp; S2 &amp; S3 &amp; S4 &amp;... &amp; k\\
+1601 &amp; 1 &amp; 0 &amp; 1 &amp; 1 &amp;...\\
+1602 &amp; 1 &amp; 0 &amp; 0 &amp; 1 &amp;...\\
+1603 &amp; 0 &amp; 0 &amp; 1 &amp; 1 &amp;...\\
+1604 &amp; 1 &amp; 1 &amp; 1 &amp; 2 &amp;...\\
+\end{bmatrix}
+\]</span></p>
+<p>Here each record is for a tagged carcass and the subsequent sampling periods <span class="math inline">\(j\)</span>. A value of 0 indicates the carcass was not captured, a value of 1 indicates the carcass was captured, and a value of 2 indicates the carcass was captured and “chopped” (beheaded) and removed from the system.</p>
+<p><strong>Chops</strong> is the record of the number of carcasses removed from the system upon first capture. This is done when the carcass is deteriorated beyond identification or measurement, and wont last long enough for further recaptures. The data can look like:</p>
+<p><span class="math display">\[
+\begin{bmatrix}
+S1 &amp; S2 &amp; S3 &amp; S4 &amp; S5 &amp;... &amp; k\\
+0 &amp; 4 &amp; 27 &amp; 18 &amp; 20
+\end{bmatrix}
+\]</span></p>
+<p>With just one row of total chopped counts for each sampling period.</p>
+<p><strong>Covariate</strong> <strong>data</strong> is the record of relevant covariates for each captured carcass or each survey period. For CVCS surveys, the covariates currently used are the sex and the length of the carcass. In the future we hope to incorporate environmental variables such as temperature and flow. A covariate table usually looks like:</p>
+<p><span class="math display">\[
+\begin{bmatrix}
+DiscTag &amp; Sex &amp; Length\\
+1601 &amp; F &amp; 200\\
+1602 &amp; F &amp; 223 \\
+1603 &amp; M &amp; 195\\
+1604 &amp; M &amp; 180\\
+\end{bmatrix}
+\]</span></p>
+<p>With the covariates recorded for each carcass marked with a disctag, and used to help determine different values of <span class="math inline">\(p\)</span> and <span class="math inline">\(\phi\)</span> for each carcass.</p>
+</section>
+<section id="probabilities-of-capture-and-survival" class="level4">
+<h4 class="anchored" data-anchor-id="probabilities-of-capture-and-survival">Probabilities of capture and survival</h4>
+<p>While equations 4 through 6 used to estimate abundance using carcass survey data may seem relatively straight forward, they are heavily dependent on estimates of <span class="math inline">\(p_{ij}\)</span> and <span class="math inline">\(\phi_{ij}\)</span>, which are much more complex to get.</p>
+<p>With these probabilities the “capture history” of a carcass <span class="math inline">\(i\)</span> can be represented for each sampling period <span class="math inline">\(j\)</span> as:</p>
+<p><span class="math display">\[ \begin{matrix} j=1&amp;\xrightarrow {\phi_{1i}}&amp; j=2&amp;\xrightarrow {\phi_{2i}}&amp; j=3&amp;\xrightarrow {\phi_{3i}}&amp; j=4&amp;\xrightarrow {\phi_{4i}}&amp; j=5 &amp;...\\   &amp;&amp;p_{2i} &amp;&amp;p_{3i} &amp;&amp;p_{4i} &amp;&amp;p_{5i} \end{matrix} \]</span></p>
+<p>Let’s say we have the following ,very simple, set of capture histories for four carcass, across four different sampling periods:</p>
+<p><span class="math display">\[
+\begin{bmatrix}
+DiscTag &amp; S1 &amp; S2 &amp; S3 &amp; S4 \\
+1601 &amp; 1 &amp; 0 &amp; 1 &amp; 1 \\
+1602 &amp; 1 &amp; 0 &amp; 0 &amp; 1 \\
+1603 &amp; 0 &amp; 0 &amp; 1 &amp; 1 \\
+1604 &amp; 1 &amp; 1 &amp; 1 &amp; 2 \\
+\end{bmatrix}
+\]</span></p>
+<p>If we look at the first row of data, the capture history for the carcass with disc-tag number 1601, we see it was captured and marked during period 1, not captured in period 2, and then captured again in periods 3 and 4. We can assign a probability of observing this capture history as:</p>
+<p><span class="math display">\[
+P(1011|\text{release at period 1})=\phi_1(1-p_2)\phi_2p_3\phi_3p_4
+\]</span></p>
+<p>In the above, <span class="math inline">\((1-p_2)\)</span> is the probability that the carcass is not captured at period <span class="math inline">\(j=2\)</span>. Now we can do the same with the rest of the example capture histories that we saw:</p>
+<p><span class="math display">\[
+P_1(1011 |\text{release at period 1})=\phi_1(1-p_2)\phi_2p_3\phi_3p_4
+\]</span></p>
+<p><span class="math display">\[
+P_2(1001|\text{release at period 1})=\phi_1(1-p_2)\phi_2(1-p_3)\phi_3p_4
+\]</span></p>
+<p><span class="math display">\[
+P_3(0011|\text{release at period 3})=\phi_2 p_3 \phi_3p_4
+\]</span></p>
+<p><span class="math display">\[
+P_4(1112|\text{release at period 1})=\phi_1p_2\phi_2p_3\phi_3p_4
+\]</span></p>
+<p>In the above note the 2 at the end of the last capture history representing a chopped event. Chopped carcasses will be dealt with later. Also note that for <span class="math inline">\(P_3\)</span> the likelihood conditions on the initial observation, and excludes estimates of <span class="math inline">\(\phi\)</span> or <span class="math inline">\(p\)</span> before that period.</p>
+<p>We can use those equations to estimate the total likelihood of observing all the capture histories we saw as:</p>
+<p><span class="math display">\[
+L=P_1*P_2*P_3*P_4
+\]</span></p>
+<p>Or as the product of all <span class="math inline">\(n\)</span> of the capture history probabilities <span class="citation" data-cites="Amstrup2005">(<a href="#ref-Amstrup2005" role="doc-biblioref">Amstrup, Mcdonald, and Manly 2005</a>)</span>:</p>
+<p><span class="math display">\[
+L=\prod_{i=1}^n P_i
+\]</span></p>
+<p>To make the computing of this probability easier we can log-transform our likelihoods so that:</p>
+<p><span class="math display">\[
+ln(L)=\sum_{i=1}^n ln(P_i) \text{ (eq. 7)}
+\]</span></p>
+<p>This is known as the “log-likelihood” of the probability. Using this simple example above, we have a way to estimate the probability of observing a set of given capture histories if we have the capture (<span class="math inline">\(p\)</span>) and survival (<span class="math inline">\(\phi\)</span>) probabilities associated with each capture history.</p>
+<p>Of course, we don’t know these probabilities, and they will likely vary across different covariates for each carcass and each period. Possible covariates could include size of carcass, carcass sex, or environmental variables such as temperature, flow, or turbidity. For CVCS work, we currently utilize covariates of sex and length to try and estimate capture and survival probabilities. For our example we will consider a CJS model in which capture probability is a function of length, and survival probability is a function of sex.</p>
+<p><span class="math display">\[
+P(capture|length) = \hat{\phi}_{ij}
+\]</span></p>
+<p><span class="math display">\[
+P(survival|sex) = \hat{p}_{ij}
+\]</span></p>
+<p>These functions can best be represented with logistic regression models:</p>
+<p><span class="math display">\[
+\hat{\phi}_{ij}=\frac{e^{\Upsilon_0+\Upsilon_1x_{ij}}}{1+e^{\Upsilon_0+\Upsilon_1x_{ij}}}
+\]</span></p>
+<p><span class="math display">\[
+\hat{p}_{ij}=\frac{e^{\beta_0+\beta_1y_{ij}}}{1+e^{\beta_0+\beta_1y_{ij}}}
+\]</span></p>
+<p>Where <span class="math inline">\(x_{ij}\)</span> is the sex of a given carcass, and <span class="math inline">\(y_{ij}\)</span> it’s length. To ease in estimating the coefficients <span class="math inline">\(\Upsilon\)</span> and <span class="math inline">\(\beta\)</span> we can turn the above into linear models:</p>
+<p><span class="math display">\[
+ln(\frac{\hat{\phi}_{ij}}{1-\hat{\phi}_{ij}})=\Upsilon_0+\Upsilon_1x_{ij}\text{ (eq. 8)}
+\]</span></p>
+<p><span class="math display">\[
+ln(\frac{\hat{p}_{ij}}{1-\hat{p}_{ij}})=\beta_0+\beta_1y_{ij}\text{ (eq. 9)}
+\]</span></p>
+<p>with <span class="math inline">\(ln(\frac{\hat{\phi}_{ij}}{1-\hat{\phi}_{ij}})\)</span> and <span class="math inline">\(ln(\frac{\hat{p}_{ij}}{1-\hat{p}_{ij}})\)</span> as our logit functions, used as “link functions” to model the probabilities as linear functions of covariates <span class="citation" data-cites="Amstrup2005">(<a href="#ref-Amstrup2005" role="doc-biblioref">Amstrup, Mcdonald, and Manly 2005</a>)</span>.</p>
+<p>You can see above that if we can estimate the coefficients of those two equations, for a given sex or length (<span class="math inline">\(x_{ij},y_{ij}\)</span>) we can estimate the corresponding probability of survival or capture. To estimate the coefficients of <span class="math inline">\(\Upsilon_0\)</span>, <span class="math inline">\(\Upsilon_1\)</span>, <span class="math inline">\(\beta_0\)</span>, and <span class="math inline">\(\beta_1\)</span>, we can use a method know as <strong>maximum log-likelihood estimation (MLE)</strong>. To do this we first need to be able to estimate the log-likelihood of our model on a given set of coefficients and capture histories, basically: what is the log-likelihood of the capture histories we observed given a set of coefficients?</p>
+<p>If we refer back to equation 7, we can remember that the log-likelihood of all the observed capture histories is equal to the sum of the log-likelihood of each individual capture history <span class="math inline">\(P_i\)</span>. The log–likelihood of the capture history for a given carcass <span class="math inline">\(i\)</span> can be given as the sum of its capture and survival probabilities from its first to last encounter, plus <span class="math inline">\(\chi_1\)</span>: the probability it is not captured after its last release. This individual capture history log-likelihood can be represented as:</p>
+<p><span class="math display">\[
+ln(P_i)=\sum_{j=first}^{last}[h_{ij}*ln(\hat{p}_{ij})+(1-h_{ij})*ln(1-\hat{p}_{ij})+ln(\hat{\phi}_{j-1,i})]+\chi_i \text{ (eq. 10)}
+\]</span></p>
+<p>Where <span class="math inline">\(h_{ij}\)</span> is 1 if the carcass was observed during <span class="math inline">\(j\)</span>, and 0 otherwise. <span class="math inline">\(\chi_i\)</span> can be represented as:</p>
+<p><span class="math display">\[
+\chi_i=(1-\hat{\phi}_{last,i})+\prod_{j=last}^n \hat{\phi}_{ij}*(1-\hat{p}_{j+1,i})*(1-\hat{\phi}_{(n-1),i})\text{ (eq. 11)}
+\]</span></p>
+<p>The first part of equation 11 <span class="math inline">\((1-\hat{\phi}_{last,i})\)</span> represents the probability the given carcass is removed from the system immediately after its last observation. The second part of equation 11 is the product of all probabilities that carcass remained in the system but wasn’t observed during all subsequent observation periods.</p>
+<p>Now we have an equation (eq. 10) that provides us with the log-likelihood of observing a given capture history with specific survival and capture probabilities. We have also shown that values of <span class="math inline">\(\phi_{ij}\)</span> and <span class="math inline">\(p_{ij}\)</span> can be linear regressed across the coefficients <span class="math inline">\(\Upsilon_0\)</span>, <span class="math inline">\(\Upsilon_1\)</span>, <span class="math inline">\(\beta_0\)</span>, and <span class="math inline">\(\beta_1\)</span> (equations 8 and 9). So now we can plug in values for the coefficients of equations 8 and 9 to give us capture and survival probabilities for a given carcass <span class="math inline">\(i\)</span> during period <span class="math inline">\(j\)</span>, which we can put into equation 10 to give us the log-likelihood of observing the capture history of that carcass using those coefficients. This process can be repeated for each carcass and summed to give us the total log-likelihood of all capture histories for all carcasses in equation 7. We can then repeat this whole process with new coefficient values until we find the coefficients of equations 8 and 9 that provide us with the <strong>maximum log-likelihood</strong>. For a good explanation of how maximum likelihood works, I highly recommend this YouTube video: <a href="https://www.youtube.com/watch?app=desktop&amp;v=XepXtl9YKwc" class="uri">https://www.youtube.com/watch?app=desktop&amp;v=XepXtl9YKwc</a>, which does a good job summarizing the basic concept.</p>
+<p>Of course, repeating the above steps to find the highest log-likelihood for even just one carcass history would take a long time to do manually, and we need to find the coefficients that will provide the highest likelihood across all of our capture histories and covariates. Fortunately, we can use an optimization algorithm to automate this process, and find the coefficients that produce the maximum likelihood estimation for us. I won’t expand on how MLE optimization algorithms work specifically, but we will be using optimization functions that available in base R, which will be discussed later.</p>
+<p>Once an optimization algorithm provides us with the coefficients that give us the maximum likelihood of observing our capture history data with the given covariates, we can use it to calculate the capture probability for each carcass (<span class="math inline">\(\hat{p}_{ij}\)</span>) given it’s length and sex. Those probabilities can then be utilized with the Horvitz-Thompson estimator (equation 3) to estimate total escapement for each period, and in turn providing an overall escapement estimate.</p>
+<div style="page-break-after: always;"></div>
+</section>
+</section>
+<section id="coding-the-cvcs-escapement-model" class="level2">
+<h2 class="anchored" data-anchor-id="coding-the-cvcs-escapement-model"><u>Coding the CVCS Escapement Model</u></h2>
+<section id="reviewing-the-escapemr-package" class="level3">
+<h3 class="anchored" data-anchor-id="reviewing-the-escapemr-package">Reviewing the escapeMR package</h3>
+<p>The escapeMR package (<a href="https://gitlab.com/tmcd/escapemr" class="uri">https://gitlab.com/tmcd/escapemr</a>), written by Trent McDonald, Ph.D., was designed specifically for CDFW CVCS escapement surveys as a user-friendly Rshiny interface. The Rshiny application itself can either be accessed online here: <a href="https://tmcd.shinyapps.io/escapemr/" class="uri">https://tmcd.shinyapps.io/escapemr/</a>, or by loading the escapeMR package into R and using the <code>escapeMR()</code> call to load the shiny app.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"escapeMR"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(escapeMR)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">escapeMR</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="pictures/figure_shiny.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">The user interface of the escapeMR shiny application.</figcaption>
+</figure>
+</div>
+<p>The shiny application allows users to upload capture histories, chops data, and covariate data as .csv files. Then users can specify how the capture and survival probabilities are modeled using either sex or length covariates, and set bootstrap replications and target confidence intervals before running the model. After processing, the model outputs an estimate of total escapement with upper and lower bounds, and a histogram and summary of bootstrapping results.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="pictures/figure_shinyoutput.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Reported outputs of escapeMR shiny application.</figcaption>
+</figure>
+</div>
+<p>Before attempting to code the equations and methods described above for our CVCS escapement model, it is helpful to review, at least at an overview level, how the <code>escapeMR</code> model and code works. This helped me develop the code and functions I wrote, and also identify potential restrictions and possible avenues for improvement.</p>
+<p>The <code>escapeMR</code> package is actually a “front-end” package that loads and formats user data before passing it to a “back-end” package <code>mra</code>, which is the “Mark Recpature Analysis” package (<a href="https://cran.r-project.org/web/packages/mra/mra.pdf" class="uri">https://cran.r-project.org/web/packages/mra/mra.pdf</a>). The ‘mra’ package was also written by Trent McDonald, prior to his work with CDFW on the <code>escapeMR</code> package, and is a more generalized mark-recapture package without the user friendly interface.</p>
+<p>Let’s first examine the <code>escapeMR</code> package by examining it’s gitlab repository: <a href="https://gitlab.com/tmcd/escapemr/-/tree/master/R" class="uri">https://gitlab.com/tmcd/escapemr/-/tree/master/R</a>. In this repository are several different R scripts that the package utilizes to load, format, and pass data to the <code>mra</code> package. I will make note of the ones important to our efforts here:</p>
+<ul>
+<li><p><strong>escapeMR.R</strong> - loads and runs the shiny application for user interface with the package.</p></li>
+<li><p><strong>askForData.R</strong> - prompts user to load catch history, chops, and covariate data, and then formats it for use in the <code>mra</code> package.</p></li>
+<li><p><strong>CJSscript.R</strong> - a script based version of the escapeMR shiny application that can be run in R without needing to use shiny. Takes user inputs and runs the “esc_model.R” script based on those inputs (model selection, bootstrap iterations, and confidence intervals).</p></li>
+<li><p><strong>esc_model.R</strong> - the workhorse script of the <code>escapeMR</code> package, this passes the formatted data to the <code>mra</code> package using the <code>F.cjs.estim()</code> call. The script then receives the estimates of <span class="math inline">\(\hat{N}_j\)</span>, <span class="math inline">\(\hat{p}\)</span>, and <span class="math inline">\(\hat{\phi}\)</span>, and uses them to estimate final escapement.</p></li>
+</ul>
+<p>The <code>mra</code> package repository can be accessed here: <a href="https://github.com/tmcd82070/MRA/tree/master" class="uri">https://github.com/tmcd82070/MRA/tree/master</a>, note its been sometime since it was updated. There are a lot of folders and scripts in this repository, so again I will highlight the one’s I referenced in my efforts, and how they are applicable to our work.</p>
+<ul>
+<li><p><strong>F.cjs.estim.R</strong> - receives the input data from the <code>escapeMR</code> package, and set’s initial parameters to use with MLE to make our estimates of <span class="math inline">\(\hat{N}_j\)</span>, <span class="math inline">\(\hat{p}\)</span>, and <span class="math inline">\(\hat{\phi}\)</span>. This script then passes the initial parameters and relevant data to a <code>.Fortran("cjsmod")</code> call. This then utilizes the FORTRAN coding language and the “Mrawin.f90” script in the package to do all the leg-work of MLE.</p></li>
+<li><p><strong>Mrawin.f90</strong> - this is FORTRAN script of various subroutines used in finding the MLE of our model. the “cjs” subroutine takes the formatted data and passes it to other subroutines which replicate many of the equations we’ve discussed so far.</p>
+<ul>
+<li>Of important note is the subroutine <code>VA09AD</code>, which is the MLE algorithm that the <code>mra</code> package uses to find the most likely survival and capture probability coefficients for equations 8 and 9. I have not been able to find out much information about this algorithm, other than that is a minimization algorithm (so the <code>mra</code> package just multiplies it by <span class="math inline">\(-1\)</span>, and that it originates from the Harwell Subroutine Library. I was also unable to replicate this method in R, and am instead relying on the R <code>optim()</code> call for maximization. In a later section I will discuss the benefits and drawbacks of this.</li>
+</ul></li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="pictures/figure_escapemr.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Conceptual model overview of how the escapeMR and mra package operate.</figcaption>
+</figure>
+</div>
+</section>
+<section id="reviewing-some-example-data" class="level3">
+<h3 class="anchored" data-anchor-id="reviewing-some-example-data">Reviewing some example data</h3>
+<p>To start our coding section, we’ll begin by getting our data together, and preparing to process it.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>ch<span class="ot">&lt;-</span><span class="fu">read.csv</span>(<span class="st">'data/demo_CH.csv'</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>covars<span class="ot">&lt;-</span><span class="fu">read.csv</span>(<span class="st">'data/demo_Covariates.csv'</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>chops<span class="ot">&lt;-</span><span class="fu">read.csv</span>(<span class="st">'data/demo_Chops.csv'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s review our different data sets, first with the capture history data we loaded in as ‘ch’. For this demo data we are utilizing a smaller data set with just 153 capture histories to keep the processing time lower. The capture history should have the expected format, with the first column showing the individual disc-tag for each carcass. The following columns contain the observation values for each survey period, with either a 0, 1, or 2 representing no-observation, observation, or observation and removal, respectively.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(ch)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  DiscTag X1 X2 X3 X4 X5
+1     111  0  1  2  0  0
+2     114  0  1  0  0  2
+3      12  0  1  0  0  0
+4     123  0  1  0  0  0
+5     127  0  1  0  0  0
+6     129  0  1  0  0  0</code></pre>
+</div>
+</div>
+<p>Next we can review our covariate data “covars”, containing the sex and fork-length for each carcass that has a corresponding disc-tag and capture history.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(covars)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  DiscTag sex length
+1     111   M    755
+2     114   M    737
+3      12   F    718
+4     123   F    763
+5     127   M    754
+6     129   F    728</code></pre>
+</div>
+</div>
+<p>Finally we’ll review the “chops” data, which is just one record, with the number of carcasses for each survey period that were removed from the system on first observation. This carcasses won’t have capture histories represented in the “ch” data set.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(chops)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  SurveyMetaID X1 X2 X3 X4 X5
+1            1 10 42 95 61 13</code></pre>
+</div>
+</div>
+</section>
+<section id="coding-the-superpopulation-model" class="level3">
+<h3 class="anchored" data-anchor-id="coding-the-superpopulation-model">Coding the superpopulation model</h3>
+<p>When coding our equations here, we’ll start at the end first. We’ll first write the Horvitz-Thompson estimator (equation 3), that we’ll then use in our superpopulation model (equation 4) to get our final estimate of escapement <span class="math inline">\(\hat{N}\)</span>. The <code>Horvitz_Thompson()</code> function I’ve created below does this in the following:</p>
+<ul>
+<li>Loads <code>p_hat</code>, a matrix of capture probabilities <span class="math inline">\(\hat{p}_{ij}\)</span>, and <code>ch</code>, our capture history dataframe.</li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>At this point we haven’t calculated values for <span class="math inline">\(\hat{p}_{ij}\)</span> yet, that will be done further down the line.</p>
+</div>
+</div>
+<ul>
+<li><p>Finds <code>nan</code> and <code>ns</code> (‘number of animals’ and ‘number of surveys’) of the capture history.</p></li>
+<li><p>Makes an empty matrix <code>n_mat</code> with dimensions <code>nan * ns</code> that it fills with a for-loop with either a 0, if carcass <span class="math inline">\(i\)</span> wasn’t observed in that period, or with <span class="math inline">\(\frac{1}{\hat{p}_{ij}}\)</span> .</p></li>
+<li><p>Calculates <span class="math inline">\(\hat{N}\)</span> for each period <span class="math inline">\(j\)</span> by summing all the records of <code>n_mat</code> during period <span class="math inline">\(j\)</span>.</p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>Horvitz_Thompson<span class="ot">&lt;-</span><span class="cf">function</span>(p_hat,ch){</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  nan<span class="ot">=</span><span class="fu">nrow</span>(ch)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  ns<span class="ot">=</span><span class="fu">ncol</span>(ch)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  N_hat<span class="ot">&lt;-</span><span class="fu">list</span>()</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  n_mat<span class="ot">&lt;-</span><span class="fu">matrix</span>(<span class="cn">NA</span>,nan,ns)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>ns){</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nan){</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>      n_mat[[i,j]]<span class="ot">&lt;-</span><span class="cf">if</span>(ch[[i,j]]<span class="sc">&gt;=</span><span class="dv">1</span>){</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        <span class="dv">1</span><span class="sc">/</span>p_hat[[i,j]]</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> {<span class="dv">0</span>}</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    N_hat[[j]]<span class="ot">=</span><span class="fu">sum</span>(n_mat[,j])</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(N_hat)</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If we next refer back to equation 4, we see we’ll also need estimates of <span class="math inline">\(B_j^*\)</span> or the number of new carcasses entering the system between <span class="math inline">\(j\)</span> and <span class="math inline">\(j+1\)</span>, which is given by equations 5 and 6. We’ll do all of that in one go here:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>B_star<span class="ot">&lt;-</span><span class="cf">function</span>(ch,s_hat,p_hat){</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  R<span class="ot">=</span>n<span class="ot">=</span><span class="fu">list</span>()</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  nan<span class="ot">=</span><span class="fu">nrow</span>(ch)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  ns<span class="ot">=</span><span class="fu">ncol</span>(ch)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>ns){</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    d<span class="ot">&lt;-</span>ch <span class="co">#select just the capture matrix data</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    R[j]<span class="ot">&lt;-</span><span class="fu">as.numeric</span>(<span class="fu">length</span>(<span class="fu">which</span>(d[j]<span class="sc">==</span><span class="dv">1</span>)))</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    n[j]<span class="ot">&lt;-</span><span class="fu">as.numeric</span>(<span class="fu">length</span>(<span class="fu">which</span>(d[j]<span class="sc">==</span><span class="dv">1</span>))<span class="sc">+</span><span class="fu">length</span>(<span class="fu">which</span>(d[j]<span class="sc">==</span><span class="dv">2</span>)))</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  N_hat<span class="ot">&lt;-</span><span class="fu">Horvitz_Thompson</span>(p_hat,ch)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">#next B1, or total number of births for each period</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  B1<span class="ot">&lt;-</span><span class="fu">list</span>()</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(j <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>(ns<span class="dv">-2</span>)){</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    B1[j]<span class="ot">&lt;-</span>N_hat[[j<span class="sc">+</span><span class="dv">1</span>]]<span class="sc">-</span><span class="fu">mean</span>(s_hat[,j])<span class="sc">*</span>(N_hat[[j]]<span class="sc">-</span>(n[[j]]<span class="sc">-</span>R[[j]]))</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">#next Bstar, number of births adjusted for those entering the system between</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">#j and j+1, but not surviving to j+1</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  Bstar<span class="ot">&lt;-</span><span class="cn">NULL</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(j <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>(ns<span class="dv">-2</span>)){</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    Bstar[j]<span class="ot">&lt;-</span><span class="fu">as.numeric</span>(B1[[j]]<span class="sc">*</span>(<span class="fu">log</span>(<span class="fu">mean</span>(s_hat[,j]))<span class="sc">/</span>(<span class="fu">mean</span>(s_hat[,j])<span class="sc">-</span><span class="dv">1</span>)))</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>  Bstar<span class="ot">&lt;-</span>Bstar[<span class="sc">-</span>(<span class="dv">1</span>)]</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(Bstar)</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The above function <code>B_star()</code> runs through a few steps:</p>
+<ul>
+<li><p>First it uses a for-loop to calculate <span class="math inline">\(R_j\)</span>, the number of carcasses released with tags during <span class="math inline">\(j\)</span>; and <span class="math inline">\(n_j\)</span>, the number of carcasses captured during <span class="math inline">\(j\)</span>.</p></li>
+<li><p>Then it uses the <code>Horvitz_Thompson()</code> function we wrote to estimate <span class="math inline">\(\hat{N}_j\)</span>.</p></li>
+<li><p>It then uses <code>s_hat</code> (a matrix of <span class="math inline">\(\hat{\phi}_{ij}\)</span> that like <span class="math inline">\(\hat{p}_{ij}\)</span> we haven’t yet written a function to produce), and <span class="math inline">\(n_j\)</span> and <span class="math inline">\(R_j\)</span> to estimate <code>B1</code> (<span class="math inline">\(\tilde{B}_j\)</span>, equation 5) the total number of births for period <span class="math inline">\(j\)</span>.</p></li>
+<li><p>Finally it uses <code>B1</code> and <code>s_hat</code> to calculate <span class="math inline">\(B_j^*\)</span>, the number of births between <span class="math inline">\(j\)</span> and <span class="math inline">\(j+1\)</span>.</p></li>
+</ul>
+<p>To wrap everything up we can write a final function <code>total_escapement()</code>, which uses what we’ve created so far to estimate <span class="math inline">\(\hat{N}_{escapement}\)</span>(equation 4):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>total_escapement<span class="ot">&lt;-</span><span class="cf">function</span>(ch,s_hat,p_hat){</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>N_hat<span class="ot">=</span><span class="fu">Horvitz_Thompson</span>(p_hat,ch)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>Bstar<span class="ot">=</span><span class="fu">B_star</span>(ch,s_hat,p_hat)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>escapement<span class="ot">&lt;-</span>N_hat[[<span class="dv">2</span>]]<span class="sc">*</span>(<span class="fu">log</span>(<span class="fu">mean</span>(s_hat[,<span class="dv">1</span>]))<span class="sc">/</span>(<span class="fu">mean</span>(s_hat[,<span class="dv">1</span>])<span class="sc">-</span><span class="dv">1</span>)) <span class="sc">+</span> </span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(Bstar,<span class="at">na.rm=</span>T)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">return</span>(escapement)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <code>total_escapement()</code> function uses the <code>Horvitz_Thompson()</code> and <code>B_start()</code> functions we just created and returns our estimate of <span class="math inline">\(\hat{N}_{escapement}\)</span>. Note that the above requires we have both <code>s_hat</code> and <code>p_hat</code>, which will be matrices with dimensions <code>nan</code> and <code>ns</code> for values of <span class="math inline">\(\hat{\phi}\)</span> and <span class="math inline">\(\hat{p}\)</span> for each carcass <span class="math inline">\(i\)</span> and period <span class="math inline">\(j\)</span>. We don’t yet have a way to estimate those, so that will be the next big step.</p>
+</section>
+<section id="getting-estimates-of-hatphi-and-hatp" class="level3">
+<h3 class="anchored" data-anchor-id="getting-estimates-of-hatphi-and-hatp">Getting estimates of <span class="math inline">\(\hat{\phi}\)</span> and <span class="math inline">\(\hat{p}\)</span></h3>
+<p>So far we’ve written functions that will allow us to take values for <span class="math inline">\(\hat{\phi}\)</span> and <span class="math inline">\(\hat{p}\)</span> and produce our final reported value of <span class="math inline">\(\hat{N}_{escapement}\)</span>. This brings us to the complicated part of estimating <span class="math inline">\(\hat{\phi}_{ij}\)</span> and <span class="math inline">\(\hat{p}_{ij}\)</span> for each carcass and survey period.</p>
+<p>If we recall equations 8 and 9, we had ways of estimating <span class="math inline">\(\hat{\phi}_{ij}\)</span> and <span class="math inline">\(\hat{p}_{ij}\)</span> for each carcass based on linear regression for given covariates, in our example sex (<span class="math inline">\(x_{ij}\)</span>) and length (<span class="math inline">\(y_{ij}\)</span>). So if we can figure out values for the coefficients <span class="math inline">\(\Upsilon_0\)</span>, <span class="math inline">\(\Upsilon_1\)</span>, <span class="math inline">\(\beta_0\)</span>, and <span class="math inline">\(\beta_1\)</span>, we have a linear equation that solves for <span class="math inline">\(\hat{\phi}_{ij}\)</span> and <span class="math inline">\(\hat{p}_{ij}\)</span>.</p>
+<p>Now let’s write a function that replicates equations 8 and 9, which will utilize coefficients for <span class="math inline">\(\Upsilon\)</span> and <span class="math inline">\(\beta\)</span> to estimate values for <span class="math inline">\(\hat{\phi}\)</span> and <span class="math inline">\(\hat{p}\)</span>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>pro_capsur<span class="ot">&lt;-</span><span class="cf">function</span>(i,j,ch, beta,cap_X,surv_X){</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  nan<span class="ot">=</span><span class="fu">nrow</span>(ch)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  ns<span class="ot">=</span><span class="fu">ncol</span>(ch)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  p<span class="ot">=</span><span class="fu">length</span>(beta)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">#purpose: evaluate probability of capture and survival for each animal i</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  cap_beta<span class="ot">&lt;-</span>beta[<span class="dv">1</span><span class="sc">:</span>(p<span class="sc">/</span><span class="dv">2</span>)]</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  surv_beta<span class="ot">&lt;-</span>beta[((p<span class="sc">/</span><span class="dv">2</span>)<span class="sc">+</span><span class="dv">1</span>)<span class="sc">:</span>p]</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  zp<span class="ot">&lt;-</span><span class="fu">exp</span>(cap_beta[<span class="dv">1</span>]<span class="sc">*</span><span class="dv">1</span><span class="sc">+</span>cap_beta[<span class="dv">2</span>]<span class="sc">*</span>cap_X[i,j])</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  zs<span class="ot">&lt;-</span><span class="fu">exp</span>(surv_beta[<span class="dv">1</span>]<span class="sc">*</span><span class="dv">1</span><span class="sc">+</span>surv_beta[<span class="dv">2</span>]<span class="sc">*</span>surv_X[i,j])</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  p.hat<span class="ot">&lt;-</span>zp<span class="sc">/</span>(<span class="dv">1</span><span class="sc">+</span>zp)</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  s.hat<span class="ot">&lt;-</span>zs<span class="sc">/</span>(<span class="dv">1</span><span class="sc">+</span>zs)</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  est_list<span class="ot">&lt;-</span><span class="fu">list</span>(<span class="st">'p.hat'</span><span class="ot">=</span>p.hat,<span class="st">'s.hat'</span><span class="ot">=</span>s.hat)</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(est_list)</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The plan of the above function is to use it on each capture history record to estimate the capture and survival probabilities for each carcass during each period. The <code>pro_capsur()</code> function incorporates several variables: <code>i</code> and <code>j</code> of course represent the given carcass and survey period; <code>beta</code> is a list of our four coefficients (<span class="math inline">\(\Upsilon_0\)</span>, <span class="math inline">\(\Upsilon_1\)</span>, <span class="math inline">\(\beta_0\)</span>, and <span class="math inline">\(\beta_1\)</span>, see equations 8 and 9); and <code>cap_X</code> and <code>surv_X</code> are each vectors of the capture and survival covariates from the <code>covars</code> dataframe.</p>
+<p>The function begins by producing <code>nan</code> and <code>ns</code> from the <code>ch</code> dataframe, and assigning the capture coefficients and survival coefficients as <code>cap_beta</code> and <code>surv_beta</code> respectively. We also save a value of <code>p</code> which is just the number of coefficients we are using, in this case four. It then calculates <code>zp</code> and <code>zs</code> for a given carcass and survey <span class="math inline">\(i,j\)</span>, using equations 8 and 9 respectively. Here <code>zs</code> is <span class="math inline">\(ln(\frac{\hat{\phi}_{ij}}{1-\hat{\phi}_{ij}})\)</span> and <code>zp</code> is <span class="math inline">\(ln(\frac{\hat{p}_{ij}}{1-\hat{p}_{ij}})\)</span> , our logistic link functions. Finally the function uses those values of <code>zs</code> and <code>zp</code> to estimate <span class="math inline">\(\hat{\phi}\)</span> and <span class="math inline">\(\hat{p}\)</span>, which it then adds to a list called <code>est_list</code> and labels them as s.hat and p.hat respectively.</p>
+<p>Now that we have a function that can give us values of <span class="math inline">\(\hat{\phi}_{ij}\)</span> and <span class="math inline">\(\hat{p}_{ij}\)</span>, we can utilize it to give us the log-likelihood for each individual capture history (<span class="math inline">\(P_i\)</span>) we have observed using equation 10.</p>
+<p>If we refer to equation 10, you’ll remember one important aspect to calculating the log-likelihood of a given capture history is that it sums all the probabilities of capture and survival from the first to the last detection event for a given carcass. This means we’ll need a way to find the first and last observation for a given carcass in our <code>ch</code> dataframe. To help in this process we can write a function that does this work for us and can be used later:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>location<span class="ot">&lt;-</span><span class="cf">function</span>(nan,ns,ch){</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">#purpose: compute first and last capture for each animal</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  first <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">0</span>, nan)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  last <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">0</span>, nan)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nan){</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    findch<span class="ot">=</span><span class="cn">TRUE</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span>(j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>ns){</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span>(ch[i,j]<span class="sc">&gt;=</span><span class="dv">1</span>){</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span>(findch<span class="sc">==</span>T <span class="sc">&amp;&amp;</span> (j<span class="sc">&lt;</span>ns)){</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>          first[i]<span class="ot">=</span>(j<span class="sc">+</span><span class="dv">1</span>)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>          findch<span class="ot">=</span><span class="cn">FALSE</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>        last[i]<span class="ot">=</span>j</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>  est_list<span class="ot">&lt;-</span><span class="fu">list</span>(<span class="st">'first'</span><span class="ot">=</span>first,<span class="st">'last'</span><span class="ot">=</span>last)</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(est_list)</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <code>location()</code> function utilizes <code>ch</code> our capture history data frame, and runs a for-loop through each record and survey, looking for the first and last periods <span class="math inline">\(j\)</span> that carcass <span class="math inline">\(i\)</span> was observed during. It then returns two lists, <code>est_list$first</code> and <code>est_list$last</code> which list the first and last encounters respectively. While reviewing the above function, you may wonder why the record for <code>first[i]</code> is equal to <code>j+1</code>, where <code>j</code> is the first time it was encountered. This is because our estimate of likelihood for the given capture history is conditioned on the initial observation of the carcass, so when estimating capture probability we want <code>first[i]</code> to be the occasion after the first encounter, which is the period with the first estimable capture probability.</p>
+<p>Our next function is the longest and most complicated, and aims to replicate equation 10. The end output is the estimated total log-likelihood of observing the provided capture histories with a given <code>beta</code>, our four coefficients (<span class="math inline">\(\Upsilon_0\)</span>, <span class="math inline">\(\Upsilon_1\)</span>, <span class="math inline">\(\beta_0\)</span>, and <span class="math inline">\(\beta_1\)</span>). I’ve put the whole function in the following code chunk, but have included commented parts which I break down below:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>CJS_loglik<span class="ot">&lt;-</span><span class="cf">function</span>(beta,cap_X,surv_X,ch){</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Part 1: Initialize variables</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  xlnlik <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  nan<span class="ot">=</span><span class="fu">nrow</span>(ch)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  ns<span class="ot">=</span><span class="fu">ncol</span>(ch)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Part 2: get locations</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  first<span class="ot">&lt;-</span><span class="fu">location</span>(nan,ns,ch)<span class="sc">$</span>first</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  last<span class="ot">&lt;-</span><span class="fu">location</span>(nan,ns,ch)<span class="sc">$</span>last</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Part 3: Calculating total log-likelihood</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nan){</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">#set initial values</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    sum1<span class="ot">=</span><span class="dv">0</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    sum2<span class="ot">=</span><span class="dv">0</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    vp_ij<span class="ot">&lt;-</span><span class="cn">NA</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    vs_ij<span class="ot">&lt;-</span><span class="cn">NA</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(first[i]<span class="sc">==</span><span class="dv">0</span>){</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>      init_cap<span class="ot">=</span>ns<span class="sc">+</span><span class="dv">1</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>      init_surv<span class="ot">=</span>ns<span class="sc">+</span><span class="dv">1</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span>(first[i]<span class="sc">&gt;</span><span class="dv">0</span>){</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>      init_cap<span class="ot">=</span>first[i]</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>      init_surv<span class="ot">=</span>first[i]<span class="sc">-</span><span class="dv">1</span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Part 3.1: Compute all probabilities of capturing carcass i,</span></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">#from first occasion to end</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (init_cap<span class="sc">&lt;=</span>ns){</span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (j <span class="cf">in</span> init_cap<span class="sc">:</span>ns) {</span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>        vp_ij[j] <span class="ot">&lt;-</span> <span class="fu">pro_capsur</span>(i,j,ch,beta,cap_X,surv_X)<span class="sc">$</span>p.hat</span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Part 3.2:Compute all probabilities of carcass i surviving from j to j+1,</span></span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">#from first occasion to end</span></span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(init_surv<span class="sc">&lt;</span>ns){</span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span>(j <span class="cf">in</span> init_surv<span class="sc">:</span>(ns<span class="dv">-1</span>)){</span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>        vs_ij[j] <span class="ot">&lt;-</span> <span class="fu">pro_capsur</span>(i,j,ch,beta,cap_X,surv_X)<span class="sc">$</span>s.hat</span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Part 3.3: compute log-likelihood contribution for animal i</span></span>
+<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>((first[i]<span class="sc">&gt;</span><span class="dv">0</span> <span class="sc">&amp;&amp;</span> first[i]<span class="sc">&lt;=</span>last[i])){</span>
+<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span>(j <span class="cf">in</span> first[i]<span class="sc">:</span>last[i]){<span class="co">#for each of the observations for the animal,</span></span>
+<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a>                                  <span class="co">#from first contact to last</span></span>
+<span id="cb16-48"><a href="#cb16-48" aria-hidden="true" tabindex="-1"></a>       hij <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(ch[i, j] <span class="sc">&gt;=</span> <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb16-49"><a href="#cb16-49" aria-hidden="true" tabindex="-1"></a>        <span class="co">#for each observation, calculate a running sum of</span></span>
+<span id="cb16-50"><a href="#cb16-50" aria-hidden="true" tabindex="-1"></a>        <span class="co">#ln(L)=ln(p)+(ln(1-p))+ln(survival)</span></span>
+<span id="cb16-51"><a href="#cb16-51" aria-hidden="true" tabindex="-1"></a>        sum1<span class="ot">=</span>sum1<span class="sc">+</span>hij<span class="sc">*</span><span class="fu">log</span>(vp_ij[j])<span class="sc">+</span></span>
+<span id="cb16-52"><a href="#cb16-52" aria-hidden="true" tabindex="-1"></a>          (<span class="dv">1</span><span class="sc">-</span>hij)<span class="sc">*</span><span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span>vp_ij[j])<span class="sc">+</span></span>
+<span id="cb16-53"><a href="#cb16-53" aria-hidden="true" tabindex="-1"></a>          <span class="fu">log</span>(vs_ij[j<span class="dv">-1</span>])</span>
+<span id="cb16-54"><a href="#cb16-54" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb16-55"><a href="#cb16-55" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb16-56"><a href="#cb16-56" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-57"><a href="#cb16-57" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Part 3.4: Find second part of likelihood, Chi</span></span>
+<span id="cb16-58"><a href="#cb16-58" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Chi = probability of animal i not being seen again after last i</span></span>
+<span id="cb16-59"><a href="#cb16-59" aria-hidden="true" tabindex="-1"></a>    <span class="co">#If animal died on capture before release, prob of not seeing again is 1</span></span>
+<span id="cb16-60"><a href="#cb16-60" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(ch[i,last[i]]<span class="sc">&gt;=</span><span class="dv">2</span>){</span>
+<span id="cb16-61"><a href="#cb16-61" aria-hidden="true" tabindex="-1"></a>      sum2<span class="ot">=</span><span class="dv">0</span></span>
+<span id="cb16-62"><a href="#cb16-62" aria-hidden="true" tabindex="-1"></a>    }<span class="cf">else</span> <span class="cf">if</span>(last[i]<span class="sc">&gt;</span><span class="dv">0</span> <span class="sc">&amp;&amp;</span> last[i]<span class="sc">&lt;</span>ns){</span>
+<span id="cb16-63"><a href="#cb16-63" aria-hidden="true" tabindex="-1"></a>      sum2<span class="ot">=</span><span class="dv">1</span><span class="sc">-</span>vs_ij[last[i]] <span class="co">#chance it died at last[i]</span></span>
+<span id="cb16-64"><a href="#cb16-64" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span>(ii <span class="cf">in</span> (last[i]<span class="sc">+</span><span class="dv">1</span>)<span class="sc">:</span>ns){<span class="co">#for each obs after last[i]</span></span>
+<span id="cb16-65"><a href="#cb16-65" aria-hidden="true" tabindex="-1"></a>        prod<span class="ot">&lt;-</span><span class="dv">1</span></span>
+<span id="cb16-66"><a href="#cb16-66" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span>(jj <span class="cf">in</span> last[i]<span class="sc">:</span>(ii<span class="dv">-1</span>)){</span>
+<span id="cb16-67"><a href="#cb16-67" aria-hidden="true" tabindex="-1"></a>          prod<span class="ot">&lt;-</span>prod<span class="sc">*</span>vs_ij[jj]<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>vp_ij[jj<span class="sc">+</span><span class="dv">1</span>])<span class="co">#product of all chances carcass</span></span>
+<span id="cb16-68"><a href="#cb16-68" aria-hidden="true" tabindex="-1"></a>          <span class="co">#survived but wasn't seen for each observation point between</span></span>
+<span id="cb16-69"><a href="#cb16-69" aria-hidden="true" tabindex="-1"></a>          <span class="co">#last and ns-1</span></span>
+<span id="cb16-70"><a href="#cb16-70" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb16-71"><a href="#cb16-71" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span>(ii<span class="sc">&lt;</span>ns){</span>
+<span id="cb16-72"><a href="#cb16-72" aria-hidden="true" tabindex="-1"></a>          prod<span class="ot">&lt;-</span>prod<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>vs_ij[ii])</span>
+<span id="cb16-73"><a href="#cb16-73" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb16-74"><a href="#cb16-74" aria-hidden="true" tabindex="-1"></a>        sum2<span class="ot">&lt;-</span>sum2<span class="sc">+</span>prod</span>
+<span id="cb16-75"><a href="#cb16-75" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb16-76"><a href="#cb16-76" aria-hidden="true" tabindex="-1"></a>      sum2<span class="ot">&lt;-</span><span class="fu">log</span>(sum2)</span>
+<span id="cb16-77"><a href="#cb16-77" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb16-78"><a href="#cb16-78" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-79"><a href="#cb16-79" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Part 3.5: estimate total likelihood of carcass capture history</span></span>
+<span id="cb16-80"><a href="#cb16-80" aria-hidden="true" tabindex="-1"></a>    xlnlik<span class="ot">&lt;-</span>xlnlik<span class="sc">+</span>sum1<span class="sc">+</span>sum2</span>
+<span id="cb16-81"><a href="#cb16-81" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb16-82"><a href="#cb16-82" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(xlnlik)</span>
+<span id="cb16-83"><a href="#cb16-83" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ul>
+<li><p>Part 1: initializes some variables used throughout the rest of the function, including the initial value of <code>xlnlik</code> (which will be our final output) to 0.</p></li>
+<li><p>Part 2: the <code>CJS_loglik()</code> function creates a <code>first</code> and <code>last</code> list for our capture histories using the <code>location()</code> function we just wrote.</p></li>
+<li><p>Part 3: initializes a for-loop over each capture history record in <code>ch</code> , sets initial values for the loop. Also sets values for <code>init_cap</code> and <code>init_surv</code>, which will tell the next steps which period <span class="math inline">\(j\)</span> to begin with when estimating values for <code>vp_ij</code> (<span class="math inline">\(\hat{\phi}_{ij}\)</span>) and <code>vs_ij</code> (<span class="math inline">\(\hat{p}_{ij}\)</span>) for each carcass.</p></li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For the above if statement, <code>first[i]==0</code> is used because when the first encounter ends up being the last period of observation, the <code>location()</code> function we wrote will give it a first value of 0.</p>
+</div>
+</div>
+<ul>
+<li><p>Part 3.1: computes values of <span class="math inline">\(\hat{p}\)</span> for carcass <span class="math inline">\(i\)</span> from the first observation to the last on utilizing the <code>pro_capsur()</code> function we wrote earlier, with the given coefficients <code>beta</code>. It assigns those values to the vectors <code>vp_ij</code>.</p></li>
+<li><p>Part 3.2: computes values of <span class="math inline">\(\hat{\phi}\)</span> for carcass <span class="math inline">\(i\)</span> from the first observation to the last on utilizing the <code>pro_capsur()</code> function we wrote earlier, with the given coefficients <code>beta</code>. It assigns those values to the vectors <code>vs_ij</code>.</p></li>
+<li><p>Part 3.3: uses the estimates of <span class="math inline">\(\hat{p}\)</span> and <span class="math inline">\(\hat{\phi}\)</span> to compute the log-likelihood contribution for carcass <span class="math inline">\(i\)</span>, used in equation 10. This is the first part of the equation calculating the log-likelihood of everything in equation 10 up to <span class="math inline">\(\chi\)</span> . Saves output as value <code>sum1</code>.</p></li>
+<li><p>Part 3.4: estimates the log-likelihood of <span class="math inline">\(\chi\)</span> (equation 11), and adding them both together to get <code>xlnlik</code>, our final estimate of the log-likelihood for that individual capture history. Saves output as <code>sum2</code></p></li>
+<li><p>Part 3.5: once the for-loop is complete, the function returns the final value of <code>xlnlik</code>, the total sum of all the log-likelihood of observing all the observed capture histories given the provided covariates and coefficients in <code>beta</code> (<span class="math inline">\(\Upsilon_0\)</span>, <span class="math inline">\(\Upsilon_1\)</span>, <span class="math inline">\(\beta_0\)</span>, and <span class="math inline">\(\beta_1\)</span>).</p></li>
+</ul>
+<p>Now let’s review the functions we’ve made so far:</p>
+<ul>
+<li><p>The <code>total_escapement()</code> function, which utilizes our capture history (<code>ch)</code>; <code>p_hat</code> and <code>s_hat</code>, matrices of <span class="math inline">\(\hat{p}_{ij}\)</span> and <span class="math inline">\(\hat{\phi}_{ij}\)</span>; as well as the <code>Horivtz_Thompson()</code> and <code>B_star()</code> functions to produce a final estimate of <span class="math inline">\(\hat{N}\)</span> for the study period. This function replicates equation 4.</p></li>
+<li><p>The <code>pro_capsur()</code> function was made to estimate the individual values of <span class="math inline">\(\hat{p}_{ij}\)</span> and <span class="math inline">\(\hat{\phi}_{ij}\)</span> which populate the <code>p_hat</code> and <code>s_hat</code> matrices using the covariates provided and the coefficients (<span class="math inline">\(\Upsilon_0\)</span>, <span class="math inline">\(\Upsilon_1\)</span>, <span class="math inline">\(\beta_0\)</span>, and <span class="math inline">\(\beta_1\)</span>) stored in the <code>beta</code> list. This function replicates equations 8 and</p>
+<ol start="9" type="1">
+<li></li>
+</ol></li>
+<li><p>The <code>location()</code> function which finds the first and last encounter for each carcass. This function is used in the <code>CJS_loglik()</code> function.</p></li>
+<li><p>The <code>CJS_loglik()</code> function that utilizes the <code>beta</code>, <code>ch</code>, <code>cap_X</code> and <code>surv_X</code> data to estimate the total log-likelihood of the given capture histories and covariates being observed, given the provided coefficients. This function replicates equations 10</p></li>
+</ul>
+<p>Recall that we can use equation 10 to find the coefficients in equations 8 and 9 that produce the highest likelihood of occurring, or the maximum log-likelihood estimation. We can leverage the <code>optim()</code> call in R, a general-purpose optimization function, to pass different values of <code>beta</code> into the <code>CJS_loglike()</code> function to find the set that maximizes the log-likelihood.</p>
+<p>Before we can use the <code>optim()</code> function though, we need to define a wrapper function that takes the <code>beta</code> argument and passes the other required values (<code>ch</code>,<code>cap_X</code>, and <code>surv_X</code>) to the <code>CJS_loglik()</code>function. Then <code>optim()</code> can call the wrapper function with different values of <code>beta</code> to find the coefficients with the maximum log-likelihood. This wrapper function can be written like so:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>CJS_loglik_wrapper <span class="ot">&lt;-</span> <span class="cf">function</span>(beta, cap_X, surv_X, ch) {</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span><span class="fu">CJS_loglik</span>(beta, cap_X, surv_X, ch)  <span class="co"># Return the negative log-likelihood</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In the above <code>CJS_loglike_wrapper()</code> function, it returns the negative of the log-likelihood output, this is because by default the <code>optim()</code> function minimizes the negative of the log-likelihood.</p>
+</div>
+</div>
+</section>
+<section id="bringing-it-all-together" class="level3">
+<h3 class="anchored" data-anchor-id="bringing-it-all-together">Bringing it all together</h3>
+<p>Now we’ve written all the functions to replicate the equations covered, and allow us to find the most likely coefficients for equations 8 and 9 that will produce the observed capture histories and covariates. We can now take the functions we created, and apply them to the example data set we have to give us an estimate of total escapement.</p>
+<section id="data-preparation" class="level4">
+<h4 class="anchored" data-anchor-id="data-preparation"><em>Data preparation</em></h4>
+<p>Before we begin, we need to prepare the data we have for use in our functions. Because we’ll want to be testing our equations and functions using various example data sets, here I’ve written a function called <code>CJS_data_prep()</code> that does data formatting for us. Note that currently this function only incorporates sex and length data as covariates for survival and capture probabilities. In the future, if we aim to incorporate other covariates, data will need to be prepared differently.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>CJS_data_prep<span class="ot">&lt;-</span><span class="cf">function</span>(ch,chops,covars){</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">4211</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co">#Part 1: prepare ch and covars data</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a> ch<span class="ot">=</span>ch[<span class="sc">-</span><span class="dv">1</span>] <span class="co">#remove disctag vector from capture histories</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a> covars<span class="sc">$</span>sex<span class="ot">&lt;-</span><span class="fu">ifelse</span>(covars<span class="sc">$</span>sex<span class="sc">==</span><span class="st">'F'</span>,<span class="dv">1</span>,<span class="dv">0</span>) <span class="co">#change sex to numeric value </span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co">#Part 2: prep chops data</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a> chops<span class="ot">&lt;-</span>chops[<span class="sc">-</span><span class="dv">1</span>]</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a> clean_chops<span class="ot">&lt;-</span><span class="fu">matrix</span>(<span class="at">ncol=</span><span class="fu">ncol</span>(chops))</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a> <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(chops)){</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>   d<span class="ot">&lt;-</span>chops[i]</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>   r<span class="ot">&lt;-</span><span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(chops))</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>   r[i]<span class="ot">=</span><span class="dv">2</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>   r<span class="ot">&lt;-</span><span class="fu">matrix</span>(<span class="fu">rep</span>((r),d),<span class="at">ncol=</span><span class="fu">ncol</span>(chops),<span class="at">byrow=</span>T)</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>   clean_chops<span class="ot">&lt;-</span>clean_chops<span class="sc">%&gt;%</span><span class="fu">rbind</span>(r)</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>   }</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a> clean_chops<span class="ot">&lt;-</span>clean_chops[<span class="sc">-</span><span class="dv">1</span>,]</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a> <span class="fu">colnames</span>(clean_chops)<span class="ot">&lt;-</span><span class="fu">colnames</span>(ch)</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a> <span class="co">#add in chops</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a> ch<span class="ot">&lt;-</span>ch<span class="sc">%&gt;%</span><span class="fu">rbind</span>(clean_chops)</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="co">#Part 3: generate sex data for chopped data</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a> index <span class="ot">=</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">dim</span>(ch)[<span class="dv">1</span>]</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a> samp<span class="ot">&lt;-</span> <span class="fu">sample</span>(index, <span class="at">replace =</span> T)</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a> covariates_new<span class="ot">&lt;-</span><span class="fu">as.matrix</span>(covars[samp,])</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a> sex_vector<span class="ot">&lt;-</span>covariates_new[,<span class="st">'sex'</span>]</span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a> no.miss <span class="ot">=</span> sex_vector[<span class="sc">!</span><span class="fu">is.na</span>(sex_vector)]</span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a> prop.female<span class="ot">&lt;-</span><span class="fu">mean</span>(no.miss)</span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a> prop.male<span class="ot">&lt;-</span><span class="dv">1</span><span class="sc">-</span>prop.female</span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a> sex_vector<span class="ot">&lt;-</span><span class="fu">ifelse</span>(<span class="fu">is.na</span>(sex_vector),</span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">sample</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>),<span class="dv">1</span>,<span class="at">prob=</span><span class="fu">c</span>(prop.female,prop.male)),</span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>                    sex_vector)</span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a> sex_matrix<span class="ot">&lt;-</span><span class="fu">matrix</span>(sex_vector,<span class="at">nrow=</span><span class="fu">nrow</span>(ch),<span class="at">ncol=</span><span class="fu">ncol</span>(ch))</span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a><span class="co">#Part 4: generate length data for chopped data</span></span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a> lengths_vector<span class="ot">&lt;-</span>covariates_new[,<span class="st">'length'</span>]</span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a> females<span class="ot">&lt;-</span>covariates_new[covariates_new[,<span class="dv">2</span>]<span class="sc">==</span><span class="dv">1</span>,]</span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a> males<span class="ot">&lt;-</span>covariates_new[covariates_new[,<span class="dv">2</span>]<span class="sc">==</span><span class="dv">0</span>,]</span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a> avg.female.length<span class="ot">&lt;-</span><span class="fu">round</span>(<span class="fu">mean</span>(<span class="fu">as.numeric</span>(females[,<span class="dv">3</span>]),<span class="at">na.rm=</span>T),<span class="dv">1</span>)</span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a> avg.male.length<span class="ot">&lt;-</span><span class="fu">round</span>(<span class="fu">mean</span>(<span class="fu">as.numeric</span>(males[,<span class="dv">3</span>]),<span class="at">na.rm=</span>T),<span class="dv">1</span>)</span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a> <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(lengths_vector)){</span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">is.na</span>(lengths_vector[i])){</span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a>     lengths_vector[i] <span class="ot">=</span> <span class="fu">ifelse</span>(sex_matrix[i,<span class="dv">1</span>] <span class="sc">==</span> <span class="dv">1</span>,</span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a>                                avg.female.length,</span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a>                                avg.male.length)</span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a>   }</span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a> }</span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a> lengths_matrix<span class="ot">&lt;-</span><span class="fu">matrix</span>(<span class="fu">as.numeric</span>(lengths_vector),</span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a>                        <span class="at">nrow=</span><span class="fu">nrow</span>(ch),<span class="at">ncol=</span><span class="fu">ncol</span>(ch))</span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a> <span class="fu">return</span>(<span class="fu">list</span>(<span class="st">'ch'</span><span class="ot">=</span>ch,<span class="st">'lengths_matrix'</span><span class="ot">=</span>lengths_matrix,</span>
+<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a>             <span class="st">'sex_matrix'</span><span class="ot">=</span>sex_matrix))</span>
+<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Again, the above is a longer function, so I’ll break it down here:</p>
+<ul>
+<li><p>Part 1: we begin by removing the first column of the capture history matrix <code>ch</code>, which contains the disctag data that can’t be used in our escapement functions. We also change the values of sex from “F” and “M” to 1 and 0, respectively.</p></li>
+<li><p>Part 2: in this function we deal with the chops data <code>chops</code> by appending it to the original capture histories <code>ch</code>. We do this by creating a new matrix of capture histories for the chopped data and appends them to the original <code>ch</code> data.</p></li>
+<li><p>Part 3: now that we’ve generated capture histories for all the chopped data, we also need to generate covariate data to utilize. First we start with the sex data, we do this by finding the proportion of male and female carcass in the original covariate data, and then assigning sex to the new capture histories based on that proportion.</p></li>
+<li><p>Part 4: Finally we can generate the lengths covariate data for the added chops capture histories. This is done by taking the average male and female lengths, and assigning it to each of the added capture histories based on sex.</p></li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Assigning the average length data to carcasses is based on the methods of the <code>escapeMR</code> package. I think this could be improved upon by sampling from the distribution of known lengths for each chopped capture history.</p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>ch<span class="ot">&lt;-</span><span class="fu">read.csv</span>(<span class="st">'data/demo_CH.csv'</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>covars<span class="ot">&lt;-</span><span class="fu">read.csv</span>(<span class="st">'data/demo_Covariates.csv'</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>chops<span class="ot">&lt;-</span><span class="fu">read.csv</span>(<span class="st">'data/demo_Chops.csv'</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>prepped_data<span class="ot">&lt;-</span><span class="fu">CJS_data_prep</span>(ch,chops,covars)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>ch_prepped<span class="ot">&lt;-</span>prepped_data<span class="sc">$</span>ch</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>cap_X_prepped<span class="ot">&lt;-</span>prepped_data<span class="sc">$</span>lengths_matrix</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>surv_X_prepped<span class="ot">&lt;-</span>prepped_data<span class="sc">$</span>sex_matrix</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We’ve prepared our data, now we can run it and our <code>CJS_loglik_wrapper()</code> function through the R <code>optim()</code> function. First we set our initial values for <code>beta</code>, then we can run the optimizer to produce the coefficients with the maximum log-likelihood. The R <code>optim()</code> call uses the following parameters:</p>
+<ul>
+<li><p>par: the initial coefficient parameters we’ll be optimizing, in our case <code>initial_beta</code>.</p></li>
+<li><p>fn: the function we will be optimizing, <code>CJS_loglike_wrapper()</code> that we created earlier.</p></li>
+<li><p>cap_X: the capture covariate lengths matrix we just prepared to be passed to the function.</p></li>
+<li><p>surv_X: the survival covariate sex matrix we just prepared to be passed to the function.</p></li>
+<li><p>ch: the prepared capture history matrix to be passed to the function.</p></li>
+<li><p>control: allows for various function control parameters, we will set the maximum number of iterations for here to 1000.</p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>initial_beta<span class="ot">=</span><span class="fu">numeric</span>(<span class="dv">4</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>{<span class="fu">gc</span>()</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>starttime<span class="ot">&lt;-</span><span class="fu">Sys.time</span>()</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>optim_results1<span class="ot">&lt;-</span><span class="fu">optim</span>(<span class="at">par=</span>initial_beta,</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">fn=</span>CJS_loglik_wrapper,</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>                      <span class="at">method=</span><span class="st">"BFGS"</span>,</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>                      <span class="at">hessian=</span><span class="cn">TRUE</span>,</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>                      <span class="at">ch=</span><span class="fu">as.matrix</span>(ch_prepped),</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>                      <span class="at">cap_X=</span><span class="fu">as.matrix</span>(cap_X_prepped),</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>                      <span class="at">surv_X=</span><span class="fu">as.matrix</span>(surv_X_prepped),</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>                      <span class="at">control=</span><span class="fu">list</span>(<span class="at">maxit=</span><span class="dv">1000</span>))</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>endtime<span class="ot">&lt;-</span><span class="fu">Sys.time</span>()</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>optim_speed1<span class="ot">&lt;-</span>endtime<span class="sc">-</span>starttime</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>optim_beta1<span class="ot">&lt;-</span>optim_results1<span class="sc">$</span>par</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Once the <code>optim()</code> call is finished we can see that the coefficients that produce the maximum log-likelihood are <span class="math inline">\(\Upsilon_0\)</span>=0.9991058 , <span class="math inline">\(\Upsilon_1\)</span>=-0.0043922 , <span class="math inline">\(\beta_0\)</span>= 1.4311065, <span class="math inline">\(\beta_1\)</span>=-0.806128 .</p>
+<p>Next we can plug those parameters into our <code>pro_capsur()</code> function to estimate the capture and survival probabilities for each carcass <span class="math inline">\(i\)</span> at each survey period <span class="math inline">\(j\)</span>. We’re likely going to have to do this process many times, so again we’ll write another function to do the work for us, and call it <code>fill_prob_matrices()</code>. This function will use the <code>pro_capsur()</code> function and apply it to all of our prepared data with the optimized parameters we’ve estimated and give us two output matrices <code>p_hat</code> and <code>s_hat.</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fill_prob_matrices<span class="ot">&lt;-</span><span class="cf">function</span>(ch,beta,cap_X,surv_X){</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  nan<span class="ot">=</span><span class="fu">nrow</span>(ch)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  ns<span class="ot">=</span><span class="fu">ncol</span>(ch)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  p_hat<span class="ot">&lt;-</span>s_hat<span class="ot">&lt;-</span><span class="fu">matrix</span>( <span class="dv">0</span>, nan, ns )</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nan){</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span>(j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>ns){</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>      p_hat[i,j]<span class="ot">&lt;-</span><span class="fu">pro_capsur</span>(i,j,ch,beta,</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>                             cap_X,</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>                             surv_X)<span class="sc">$</span>p.hat</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>      s_hat[i,j]<span class="ot">&lt;-</span><span class="fu">pro_capsur</span>(i,j,ch,beta,</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>                             cap_X,</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>                             surv_X)<span class="sc">$</span>s.hat</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  p_hat[,<span class="dv">1</span>]<span class="ot">&lt;-</span><span class="cn">NA</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>  est_list<span class="ot">&lt;-</span><span class="fu">list</span>(<span class="st">'p_hat'</span><span class="ot">=</span>p_hat,<span class="st">'s_hat'</span><span class="ot">=</span>s_hat)</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(est_list)</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>p_hat<span class="ot">&lt;-</span><span class="fu">fill_prob_matrices</span>(ch_prepped,optim_beta1,</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>                          <span class="at">cap_X =</span> cap_X_prepped,</span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>                          <span class="at">surv_X =</span> surv_X_prepped)<span class="sc">$</span>p_hat</span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>s_hat<span class="ot">&lt;-</span><span class="fu">fill_prob_matrices</span>(ch_prepped,optim_beta1,</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>                          <span class="at">cap_X =</span> cap_X_prepped,</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>                          <span class="at">surv_X =</span> surv_X_prepped)<span class="sc">$</span>s_hat</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now we have the capture histories (<code>ch_prepped</code>) and our matrices of capture and survival probabilities <code>p_hat</code> and <code>s_hat</code>, we can plug them all into our <code>total_escapement()</code> function to produce our final estimate of escapement.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>est_escapement<span class="ot">&lt;-</span><span class="fu">ceiling</span>(<span class="fu">total_escapement</span>(ch_prepped,s_hat,p_hat))</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(est_escapement)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1841</code></pre>
+</div>
+</div>
+<p>If we go back to our optimization code using the <code>nlminb()</code> function, note that the code written stores the speed of the function as <code>optim_speed1</code>. If we check that value, we can see the function was completed in 3.8 seconds. The next step in our efforts involves a process known as “bootstrapping” so that we can calculate confidence intervals for the escapement estimate we produce. This process involves repeating the optimization process for hundreds of iterations, meaning that the above process could take quite a while to run. If we increase the complexity of the optimization problem with larger capture histories and covariate data sets, which many Central Valley river systems often record, it could take hours to bootstrap our model. We need a way to speed up our model.</p>
+</section>
+</section>
+</section>
+<section id="incorporating-c-to-speed-things-up" class="level2">
+<h2 class="anchored" data-anchor-id="incorporating-c-to-speed-things-up"><u>Incorporating C++ to speed things up</u></h2>
+<p>filler</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Rcpp)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sourceCpp</span>(<span class="st">'Rcpp sources/CJS_functions.cpp'</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>starttime<span class="ot">&lt;-</span><span class="fu">Sys.time</span>()</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>{<span class="fu">gc</span>()</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  optim_results2<span class="ot">&lt;-</span><span class="fu">cpp_optim</span>(<span class="at">beta=</span>initial_beta,</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>              <span class="at">ch=</span><span class="fu">as.matrix</span>(ch_prepped),</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>              <span class="at">cap_X=</span><span class="fu">as.matrix</span>(cap_X_prepped),</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>              <span class="at">surv_X=</span><span class="fu">as.matrix</span>(surv_X_prepped))</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>endtime<span class="ot">&lt;-</span><span class="fu">Sys.time</span>()</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>optim_speed2<span class="ot">&lt;-</span>endtime<span class="sc">-</span>starttime </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>filler</p>
+</section>
+<section id="bootstrapping-for-confidence-intervals" class="level2">
+<h2 class="anchored" data-anchor-id="bootstrapping-for-confidence-intervals"><u>Bootstrapping for Confidence Intervals</u></h2>
+<p>With the methods above used to estimate total escapement, it’s difficult to produce an estimate of precision or confidence intervals. Fortunately we can once again take advantage of the speed of modern computing to perform what is known as “<strong>bootstrapping</strong>”, an iterative resampling technique we can use to estimate the distribution of the escapement estimate by repeatedly sampling, with replacement, the original dataset.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>CJS_bootstrap<span class="ot">&lt;-</span><span class="cf">function</span>(iterations,ch,cap_X,surv_X){</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  catch_matrices<span class="ot">&lt;-</span><span class="fu">c</span>()</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  results<span class="ot">&lt;-</span><span class="fu">data.frame</span>()</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  initial_beta<span class="ot">=</span><span class="fu">numeric</span>(<span class="dv">4</span>)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(r <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>iterations){</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  iter_start<span class="ot">&lt;-</span><span class="fu">Sys.time</span>()</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  index<span class="ot">=</span><span class="dv">1</span><span class="sc">:</span><span class="fu">dim</span>(ch_prepped)[<span class="dv">1</span>]</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  samp<span class="ot">&lt;-</span> <span class="fu">sample</span>(index, <span class="at">replace =</span> T)</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  ch_iteration <span class="ot">=</span> ch_prepped[samp,]</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  cap_X_iteration<span class="ot">=</span>cap_X_prepped[samp,]</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>  surv_X_iteration<span class="ot">=</span>surv_X_prepped[samp,]</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>  {<span class="fu">gc</span>()</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>    optim_iter<span class="ot">&lt;-</span><span class="fu">cpp_optim</span>(<span class="at">beta=</span>initial_beta,</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>              <span class="at">ch=</span><span class="fu">as.matrix</span>(ch_iteration),</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>              <span class="at">cap_X=</span><span class="fu">as.matrix</span>(cap_X_iteration),</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>              <span class="at">surv_X=</span><span class="fu">as.matrix</span>(surv_X_iteration))</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>  iter_beta<span class="ot">&lt;-</span>optim_iter<span class="sc">$</span>par</span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>  iter_lik<span class="ot">&lt;-</span>optim_iter<span class="sc">$</span>value</span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>  nan<span class="ot">=</span><span class="fu">nrow</span>(ch_prepped)</span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>  ns<span class="ot">=</span><span class="fu">ncol</span>(ch_prepped)</span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>  p_hat<span class="ot">&lt;-</span>s_hat<span class="ot">&lt;-</span><span class="fu">matrix</span>( <span class="dv">0</span>, nan, ns )</span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a>  p_hat<span class="ot">&lt;-</span><span class="fu">fill_prob_matrices</span>(ch_iteration,iter_beta,</span>
+<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a>                          <span class="at">cap_X =</span> cap_X_iteration,</span>
+<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a>                          <span class="at">surv_X =</span> surv_X_iteration)<span class="sc">$</span>p_hat</span>
+<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a>  s_hat<span class="ot">&lt;-</span><span class="fu">fill_prob_matrices</span>(ch_iteration,iter_beta,</span>
+<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a>                          <span class="at">cap_X =</span> cap_X_iteration,</span>
+<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a>                          <span class="at">surv_X =</span> surv_X_iteration)<span class="sc">$</span>s_hat</span>
+<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a>  est_esc_iter<span class="ot">&lt;-</span><span class="fu">ceiling</span>(<span class="fu">total_escapement</span>(ch_iteration,s_hat,p_hat))</span>
+<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a>  iter_end<span class="ot">&lt;-</span><span class="fu">Sys.time</span>()</span>
+<span id="cb25-40"><a href="#cb25-40" aria-hidden="true" tabindex="-1"></a>  iter_time<span class="ot">&lt;-</span>iter_end<span class="sc">-</span>iter_start</span>
+<span id="cb25-41"><a href="#cb25-41" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-42"><a href="#cb25-42" aria-hidden="true" tabindex="-1"></a>  catch_matrices[[r]]<span class="ot">&lt;-</span>ch_iteration</span>
+<span id="cb25-43"><a href="#cb25-43" aria-hidden="true" tabindex="-1"></a>  d<span class="ot">&lt;-</span><span class="fu">data.frame</span>(<span class="st">"iteration"</span><span class="ot">=</span>r,</span>
+<span id="cb25-44"><a href="#cb25-44" aria-hidden="true" tabindex="-1"></a>                <span class="st">"log-likelihood"</span><span class="ot">=</span>iter_lik,</span>
+<span id="cb25-45"><a href="#cb25-45" aria-hidden="true" tabindex="-1"></a>                <span class="st">"escapement"</span><span class="ot">=</span>est_esc_iter,</span>
+<span id="cb25-46"><a href="#cb25-46" aria-hidden="true" tabindex="-1"></a>                <span class="st">"time"</span><span class="ot">=</span>iter_time)</span>
+<span id="cb25-47"><a href="#cb25-47" aria-hidden="true" tabindex="-1"></a>  results<span class="ot">&lt;-</span>results<span class="sc">%&gt;%</span><span class="fu">rbind</span>(d)</span>
+<span id="cb25-48"><a href="#cb25-48" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb25-49"><a href="#cb25-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(results)</span>
+<span id="cb25-50"><a href="#cb25-50" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s use the <code>CJS_bootstrap()</code> function with 500 iterations to generate confidence intervals for our escapement estimate.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>bootstrap_results<span class="ot">&lt;-</span><span class="fu">CJS_bootstrap</span>(<span class="at">iterations=</span><span class="dv">500</span>,ch_prepped,cap_X_prepped,surv_X_prepped)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Running 500 iterations took my computer about 7.5 minutes to complete, with each iteration averaging 0.89 seconds to complete.</p>
+<p>Let’s calculate confidence intervals for our bootstrapped data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">#confidence intervals</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>conf.level <span class="ot">=</span> <span class="dv">95</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>alpha <span class="ot">=</span> <span class="dv">1</span> <span class="sc">-</span> conf.level<span class="sc">/</span><span class="dv">100</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>lower <span class="ot">=</span> alpha<span class="sc">/</span><span class="dv">2</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>upper <span class="ot">=</span> <span class="dv">1</span> <span class="sc">-</span> alpha<span class="sc">/</span><span class="dv">2</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>mid<span class="ot">=</span>.<span class="dv">5</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>ci<span class="ot">&lt;-</span>bootstrap_results</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>ci<span class="ot">&lt;-</span>ci<span class="sc">%&gt;%</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">lower_ci=</span><span class="fu">ceiling</span>(<span class="fu">quantile</span>(escapement,<span class="at">probs =</span> <span class="fu">c</span>(lower),<span class="at">na.rm=</span>T)),</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">mid_ci=</span><span class="fu">ceiling</span>(<span class="fu">quantile</span>(escapement,<span class="at">probs =</span> <span class="fu">c</span>(mid),<span class="at">na.rm=</span>T)),</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">upper_ci=</span><span class="fu">ceiling</span>(<span class="fu">quantile</span>(escapement,<span class="at">probs =</span> <span class="fu">c</span>(upper),<span class="at">na.rm=</span>T)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now let’s plot our results.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="pictures/demo_data_hist.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Plot of bootstrapped escapement estimates, with upper and lower confidence intervals.</figcaption>
+</figure>
+</div>
+<p>filler</p>
+</section>
+<section id="comparing-our-functions-to-escapemr" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-our-functions-to-escapemr"><u>Comparing our Functions to escapeMR</u></h2>
+<p>filler: comparing demo data outputs to escapeMR estimates</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(escapeMR)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">escapeMR</span>(<span class="st">"script"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="pictures/escapeMR_hist1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Histogram of escapeMR bootstrap results.</figcaption>
+</figure>
+</div>
+<section id="estimating-escapement-for-larger-datasets" class="level3">
+<h3 class="anchored" data-anchor-id="estimating-escapement-for-larger-datasets">Estimating escapement for larger datasets</h3>
+<p>Let’s compare a larger data set, using 2021 American River carcass survey data. After preparation, there are a total of 5244 individual capture histories and corresponding covariates. That’s a lot more than the demo data we used above. For this analysis we’ll run just 25 iterations through our bootstrap function, and even that will take about six minutes to complete.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>ch<span class="ot">&lt;-</span><span class="fu">read.csv</span>(<span class="st">'data/additional_data/AR_2021_CH.csv'</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>covars<span class="ot">&lt;-</span><span class="fu">read.csv</span>(<span class="st">'data/additional_data/AR_2021_Covariates.csv'</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>chops<span class="ot">&lt;-</span><span class="fu">read.csv</span>(<span class="st">'data/additional_data/AR_2021_Chops.csv'</span>)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>prepped_data<span class="ot">&lt;-</span><span class="fu">CJS_data_prep</span>(ch,chops,covars)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>ch_prepped<span class="ot">&lt;-</span>prepped_data<span class="sc">$</span>ch</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>cap_X_prepped<span class="ot">&lt;-</span>prepped_data<span class="sc">$</span>lengths_matrix</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>surv_X_prepped<span class="ot">&lt;-</span>prepped_data<span class="sc">$</span>sex_matrix</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>starttime<span class="ot">&lt;-</span><span class="fu">Sys.time</span>()</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>bootstrap_results<span class="ot">&lt;-</span><span class="fu">CJS_bootstrap</span>(<span class="at">iterations=</span><span class="dv">25</span>,</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>                                 ch_prepped,</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>                                 cap_X_prepped,</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>                                 surv_X_prepped)</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>endtime<span class="ot">&lt;-</span><span class="fu">Sys.time</span>()</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>bootstrap_speed3<span class="ot">&lt;-</span>endtime<span class="sc">-</span>starttime </span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>ci<span class="ot">&lt;-</span>bootstrap_results</span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>ci<span class="ot">&lt;-</span>ci<span class="sc">%&gt;%</span></span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">lower_ci=</span><span class="fu">ceiling</span>(<span class="fu">quantile</span>(escapement,<span class="at">probs =</span> <span class="fu">c</span>(lower),<span class="at">na.rm=</span>T)),</span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>            <span class="at">mid_ci=</span><span class="fu">ceiling</span>(<span class="fu">quantile</span>(escapement,<span class="at">probs =</span> <span class="fu">c</span>(mid),<span class="at">na.rm=</span>T)),</span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>            <span class="at">upper_ci=</span><span class="fu">ceiling</span>(<span class="fu">quantile</span>(escapement,<span class="at">probs =</span> <span class="fu">c</span>(upper),<span class="at">na.rm=</span>T)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="pictures/AR_2021_hist.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Histogram of American River bootstrapped escapement results.</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="references" class="level2 unnumbered">
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-Amstrup2005" class="csl-entry" role="listitem">
+Amstrup, Steven C., Trent L. Mcdonald, and Bryan F. J. Manly. 2005. <em><span class="nocase">Handbook of Capture-Recapture Analysis</span></em>. Princeton Univ. Press. <a href="http://www.jstor.org/stable/j.ctt7sdj6.">http://www.jstor.org/stable/j.ctt7sdj6.</a>
+</div>
+<div id="ref-Cormack1964" class="csl-entry" role="listitem">
+Cormack, R. M. 1964. <span>“<span class="nocase">Estimates of Survival from the Sighting of Marked Animals</span>.”</span> <em>Biometrika</em> 51 (3): 429–38.
+</div>
+<div id="ref-Horvitz1952" class="csl-entry" role="listitem">
+Horvitz, D. G., and D. J. Thompson. 1952. <span>“<span class="nocase">A Generalization of Sampling Without Replacement From a Finite Universe</span>.”</span> <em>Journal of the American Statistical Association</em> 44 (260): 663–85. <a href="http://www.ncbi.nlm.nih.gov/pubmed/16243365">http://www.ncbi.nlm.nih.gov/pubmed/16243365</a>.
+</div>
+<div id="ref-Jolly1965" class="csl-entry" role="listitem">
+Jolly, G. M. 1965. <span>“<span class="nocase">Explicit Estimates from Capture-Recapture Data with Both Death and Immigration- Stochastic Model</span>.”</span> <em>Biometrika</em> 52 (1): 225–47.
+</div>
+<div id="ref-Lincoln1930" class="csl-entry" role="listitem">
+Lincoln, Frederick C. 1930. <span>“<span class="nocase">Calculating Waterfowl Abundance on the Basis of Banding Returns</span>.”</span> Vol. 118. US Department of Agriculture. <a href="https://arxiv.org/abs/arXiv:1011.1669v3">https://arxiv.org/abs/arXiv:1011.1669v3</a>.
+</div>
+<div id="ref-Nichols2005" class="csl-entry" role="listitem">
+Nichols, J. D. 2008. <em><span>Modern Open-Population Capture-Recapture Models</span></em>. Edited by Steven C. Amstrup, Trent L. McDonald, and Bryan F. J. Manly. Princeton Univ. Press.
+</div>
+<div id="ref-Petersen1896" class="csl-entry" role="listitem">
+Petersen, C. G. J. 1896. <span>“<span class="nocase">The yearly immigration of young plaice in the Limfjord from the German sea</span>.”</span> <em>Report of the Danish Biological Station</em> 6: 5–84.
+</div>
+<div id="ref-Ryan2013" class="csl-entry" role="listitem">
+Ryan, Cooper, and Tauer. 2013. <span>“<span>CENTRAL VALLEY CHINOOK SALMON IN-RIVER ESCAPEMENT MONITORING PLAN</span>.”</span> <em>Paper Knowledge . Toward a Media History of Documents</em>, 12–26.
+</div>
+<div id="ref-Schnabel1938" class="csl-entry" role="listitem">
+Schnabel, Zoe E. 1938. <span>“<span class="nocase">The Estimation of the Total Fish Population of a Lake</span>.”</span> <em>American Mathematics Monthly</em> 45: 348–52.
+</div>
+<div id="ref-Seber1965" class="csl-entry" role="listitem">
+Seber, G A F. 1965. <span>“<span class="nocase">A Note on the Multiple-Recapture Census Published</span>.”</span> <em>Biometrika</em> 52 (1): 249–59.
+</div>
+</div></section></div></main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

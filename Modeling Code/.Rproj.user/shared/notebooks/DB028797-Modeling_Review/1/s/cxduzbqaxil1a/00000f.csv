@@ -1,0 +1,2 @@
+"0","library(Rcpp)"
+"0","sourceCpp('Rcpp sources/CJS_functions.cpp')"

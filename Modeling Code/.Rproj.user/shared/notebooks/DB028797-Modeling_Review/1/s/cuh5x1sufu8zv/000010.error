@@ -1,0 +1,1 @@
+{"frames":[{"func":"pro_capsur(i, j, ch, optim_beta, cap_X_prepped, surv_X_prepped)","file":"","line_number":0,"end_line_number":0,"character_number":0,"end_character_number":0}],"message":"Error in pro_capsur(i, j, ch, optim_beta, cap_X_prepped, surv_X_prepped) : \n  object 'optim_beta' not found\n"}

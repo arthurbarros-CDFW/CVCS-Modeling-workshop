@@ -1,0 +1,3 @@
+"0","ch<-read.csv('data/demo_CH.csv')"
+"0","covars<-read.csv('data/demo_Covariates.csv')"
+"0","chops<-read.csv('data/demo_Chops.csv')"

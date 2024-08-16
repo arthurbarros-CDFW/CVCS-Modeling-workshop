@@ -1,0 +1,3 @@
+"0","CJS_loglik_wrapper <- function(beta, cap_X, surv_X, ch) {"
+"0","  -CJS_loglik(beta, cap_X, surv_X, ch)  # Return the negative log-likelihood"
+"0","}"

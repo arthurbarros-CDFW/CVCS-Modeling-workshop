@@ -1,0 +1,5 @@
+"0","hist(results$escapement,breaks=10)
+"
+"2","Error in hist(results$escapement, breaks = 10) : 
+  object 'results' not found
+"

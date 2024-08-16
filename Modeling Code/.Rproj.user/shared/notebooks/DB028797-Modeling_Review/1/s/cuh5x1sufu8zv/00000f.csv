@@ -1,0 +1,13 @@
+"0","nan=nrow(ch_prepped)"
+"0","ns=ncol(ch_prepped)"
+"0","p_hat<-s_hat<-matrix( 0, nan, ns )"
+"0",""
+"0","for(i in 1:nan){"
+"0","  for(j in 1:ns){"
+"0","    p_hat[i,j]<-pro_capsur(i,j,ch,optim_beta,cap_X_prepped,surv_X_prepped)$p.hat"
+"0","    s_hat[i,j]<-pro_capsur(i,j,ch,optim_beta,cap_X_prepped,surv_X_prepped)$s.hat"
+"0","  }"
+"0","}"
+"2","Error in pro_capsur(i, j, ch, optim_beta, cap_X_prepped, surv_X_prepped) : 
+  object 'optim_beta' not found
+"

@@ -1,0 +1,6 @@
+"0","sourceCpp('Rcpp sources/CJS_functions.cpp')
+sourceCpp('Rcpp sources/CJS_functions.cpp')
+nan=nrow(ch_prepped)
+"
+"2","Error in nrow(ch_prepped) : object 'ch_prepped' not found
+"
