@@ -1,6 +1,0 @@
-"0","est_escapement<-ceiling(total_escapement(ch_prepped,s_hat,p_hat))"
-"0","print(est_escapement)"
-"1","[1]"
-"1"," 1786"
-"1","
-"

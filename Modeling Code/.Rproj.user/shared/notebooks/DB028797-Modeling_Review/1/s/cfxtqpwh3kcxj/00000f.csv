@@ -1,5 +1,0 @@
-"0","est_escapement<-ceiling(total_escapement(ch_prepped,s_hat,p_hat))
-"
-"2","Error in total_escapement(ch_prepped, s_hat, p_hat) : 
-  could not find function ""total_escapement""
-"

@@ -10,17 +10,20 @@ ch_sim<-function(N1,ns,coef){
   lengths_matrix<-matrix(round(sample(rnorm(100,mean=750,sd=25))),N1,ns)
   sex_matrix<-matrix(sample(c('M','F'),10, prob=c(.5, .5), replace=TRUE),N1,ns)
   sex_matrix<-ifelse(sex_matrix=='F',1,0)
+  
   #survival prediction
   s_model<-function(surv_beta){
     zs<-exp(surv_beta[1]*1+surv_beta[2]*sex_matrix[i,j])
     s.hat<-zs/(1+zs)
   }
   
+  #capture preditcion
   p_model<-function(cap_beta){
     zp<-exp(cap_beta[1]*1+cap_beta[2]*lengths_matrix[i,j])
     p.hat<-zp/(1+zp)
   }
   
+  #now fill capture covariate matrix
   p_matrix<-matrix(NA,N1,ns)
   for(i in 1:N1){
     for(j in 1:ns){
@@ -28,6 +31,7 @@ ch_sim<-function(N1,ns,coef){
     }
   }
   
+  #now fill survival covariate matrix
   s_matrix<-matrix(NA,N1,ns)
   for(i in 1:N1){
     for(j in 1:ns){
@@ -41,8 +45,9 @@ ch_sim<-function(N1,ns,coef){
   arrival<-ifelse(arrival<1,1,arrival)
   #hist(arrival)
   
+  #generate ch matrix and fill
   ch <- matrix(NA, N1, ns)
-  alive<-matrix(NA, N1, ns)
+  alive<-matrix(NA, N1, ns) #tracks the number of carcasses still 'alive'
   alive[,1]=1
   for(j in 1:ns){
     for(i in 1:N1){
@@ -60,6 +65,8 @@ ch_sim<-function(N1,ns,coef){
       }
     }
   }
+  
+  
   for(i in 1:N1){
     for(j in 2:ns){
       if(ch[i,j-1]==2){#if carcass chopped at period j-1, all further values =0

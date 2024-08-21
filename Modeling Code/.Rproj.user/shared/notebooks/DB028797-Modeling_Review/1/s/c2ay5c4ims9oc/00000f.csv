@@ -1,7 +1,0 @@
-"0","est_escapement<-total_escapement(ch_prepped,optim_beta,"
-"0","                                 cap_X_prepped,surv_X_prepped)"
-"0","print(est_escapement)"
-"1","[1]"
-"1"," 1841"
-"1","
-"

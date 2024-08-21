@@ -1,5 +1,0 @@
-"0"," lengths_matrix<-matrix(as.numeric(lengths_vector),nrow=nan,ncol=ns)
-"
-"2","Error in matrix(as.numeric(lengths_vector), nrow = nan, ncol = ns) : 
-  object 'nan' not found
-"

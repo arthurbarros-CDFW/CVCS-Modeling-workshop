@@ -1,1 +1,0 @@
-{"frames":[{"func":"hist(results$escapement, breaks = 10)","file":"","line_number":0,"end_line_number":0,"character_number":0,"end_character_number":0}],"message":"Error in hist(results$escapement, breaks = 10) : \n  object 'results' not found\n"}

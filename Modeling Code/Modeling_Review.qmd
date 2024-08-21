@@ -236,7 +236,7 @@ $$ {#eq-bstar}
 $\tilde{B}_j$ is the total "births" for period $j$:
 
 $$
-\tilde{B}_j=\hat{N}_{j+1} - \tilde{\phi}[\hat{N}_j-(n_j-R_j)]
+\tilde{B}_j=\hat{N}_{j+1} - \tilde{\phi}_{j}[\hat{N}_j-(n_j-R_j)]
 $$ {#eq-b_tilde}
 
 and $R_j$ is the number of carcasses released with disctags during

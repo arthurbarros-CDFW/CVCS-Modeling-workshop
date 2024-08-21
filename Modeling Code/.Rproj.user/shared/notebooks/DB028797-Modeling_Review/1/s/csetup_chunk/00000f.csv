@@ -1,4 +1,0 @@
-"0","rm( list = ls()) #clear env"
-"0","library(knitr)"
-"0","library(tinytex)"
-"0","library(tidyverse)"
