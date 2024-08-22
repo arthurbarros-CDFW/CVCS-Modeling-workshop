@@ -1778,7 +1778,7 @@ coefficients generated when we estimated escapement for our demo data.
 ```{r,ch_sims,eval=FALSE}
 source('scripts/archive/ch_simulator.R')
 
-sim<-ch_sim(N1=4000,ns=15,coef=optim_beta)
+sim<-ch_sim(N1=2000,ns=15,coef=optim_beta)
 
 ch_prepped<-sim$ch
 cap_X_prepped<-sim$lengths
