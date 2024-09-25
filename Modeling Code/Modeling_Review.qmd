@@ -1345,6 +1345,8 @@ When we utilize the `CJS_data_prep()` function in our script, it
 randomly samples sex and length data for our chopped capture histories.
 Because of this randomness, final estimates for escapement and the
 capture and survival coefficients can vary when your run this script.
+This could be fixed by using the `set.seed()` call, but would remove
+some of the variability.
 :::
 
 If we go back to our optimization code using the `optim()` function,
