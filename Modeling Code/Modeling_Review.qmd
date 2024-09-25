@@ -406,11 +406,11 @@ CJS model in which capture probability is a function of length, and
 survival probability is a function of sex.
 
 $$
-P(capture|length) = \hat{\phi}_{ij}
+P(capture|length) = \hat{p}_{ij}
 $$ {#eq-prob_cap}
 
 $$
-P(survival|sex) = \hat{p}_{ij}
+P(survival|sex) = \hat{\phi}_{ij}
 $$ {#eq-prob_surv}
 
 These functions can best be represented with logistic regression models:
@@ -1022,16 +1022,16 @@ function we wrote will give it a first value of 0.
     first part of the equation calculating the log-likelihood of
     everything up to $\chi$ . Saves output as value `sum1`.
 
--   Part 3.4: estimates the log-likelihood of $\chi$, and adding them
-    both together to get `xlnlik`, our final estimate of the
-    log-likelihood for that individual capture history. Saves output as
-    `sum2`
+-   Part 3.4: estimates the log-likelihood of $\chi$ as `sum2`, the
+    chance a carcass remains in the system but is not recaptured after
+    it's final observation.
 
--   Part 3.5: once the for-loop is complete, the function returns the
-    final value of `xlnlik`, the total sum of all the log-likelihood of
-    observing all the observed capture histories given the provided
-    covariates and coefficients in `beta` ($\Upsilon_0$, $\Upsilon_1$,
-    $\beta_0$, and $\beta_1$).
+-   Part 3.5: Adds `sum1` and `sum2` together into `xlnlik`, the running
+    sum of total likelihood. Once the for-loop is complete, the function
+    returns the final value of `xlnlik`, the total sum of all the
+    log-likelihood of observing all the observed capture histories given
+    the provided covariates and coefficients in `beta` ($\Upsilon_0$,
+    $\Upsilon_1$, $\beta_0$, and $\beta_1$).
 
 Now let's review the functions we've made so far:
 
