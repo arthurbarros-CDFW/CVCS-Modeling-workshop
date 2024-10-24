@@ -131,7 +131,7 @@ CJS_data_prep<-function(ch,chops,covars){
   set.seed(4211)
   #Part 1: prepare ch and covars data
   ch=ch[-1] #remove disctag vector from capture histories
-  covars$sex<-ifelse(covars$sex=='F',1,0) #change sex to numeric value 
+  covars$sex<-as.numeric(ifelse(covars$sex=='F',1,0)) #change sex to numeric value 
   
   #Part 2: prep chops data
   chops<-chops[-1]
@@ -154,7 +154,7 @@ CJS_data_prep<-function(ch,chops,covars){
   
   covariates_new<-as.matrix(covars[samp,])
   
-  sex_vector<-covariates_new[,'sex']
+  sex_vector<-as.numeric(covariates_new[,'sex'])
   no.miss = sex_vector[!is.na(sex_vector)]
   prop.female<-mean(no.miss)
   prop.male<-1-prop.female
@@ -208,7 +208,34 @@ B_star<-function(ch,s_hat,p_hat){
   return(Bstar)
 }
 
-total_escapement<-function(ch,s_hat,p_hat){
+fill_prob_matrices<-function(ch,beta,cap_X,surv_X){
+  nan=nrow(ch)
+  ns=ncol(ch)
+  p_hat<-s_hat<-matrix( 0, nan, ns ) #create empty matrices
+  for(i in 1:nan){
+    for(j in 1:ns){ #fill each cell with pro_capsur() function
+      p_hat[i,j]<-pro_capsur(i,j,ch,beta,
+                             cap_X,
+                             surv_X)$p.hat
+      s_hat[i,j]<-pro_capsur(i,j,ch,beta,
+                             cap_X,
+                             surv_X)$s.hat
+    }
+  }
+  p_hat[,1]<-NA
+  
+  est_list<-list('p_hat'=p_hat,'s_hat'=s_hat)
+  return(est_list)
+}
+
+total_escapement<-function(ch,beta,cap_X,surv_X){
+  
+  p_hat<-fill_prob_matrices(ch,beta,
+                            cap_X,
+                            surv_X)$p_hat
+  s_hat<-fill_prob_matrices(ch,beta,
+                            cap_X ,
+                            surv_X)$s_hat
   
   N_hat=Horvitz_Thompson(p_hat,ch)
   
@@ -217,7 +244,7 @@ total_escapement<-function(ch,s_hat,p_hat){
   escapement<-N_hat[[2]]*(log(mean(s_hat[,1]))/(mean(s_hat[,1])-1)) + 
     sum(Bstar,na.rm=T)
   
-  return(escapement)
+  return(ceiling(escapement))
 }
 
 Horvitz_Thompson<-function(p_hat,ch){
